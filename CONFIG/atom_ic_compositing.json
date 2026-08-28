@@ -1,0 +1,224 @@
+{
+  "schema_version": "1.0.0",
+  "description": "Presets compositing F09 AETHER COMPOSITUM — couches FFmpeg mappees depuis la chaine After Effects (cc release).",
+  "source_reference": "Giveaway.aep: Brightness/Contrast → Curves → Unsharp×2 → MB Looks (ACES→Rec709) → S_Glow → S_Sharpen",
+  "layers": {
+    "tonemap": {
+      "description": "Brightness, Contrast et S-curve (ADBE Brightness & Contrast 2 + ADBE CurvesCustom).",
+      "ffmpeg_filters": ["curves", "eq"]
+    },
+    "sharpen": {
+      "description": "Unsharp Mask en double passe (ADBE Unsharp Mask2 + BCC3Unsharp Mask).",
+      "ffmpeg_filters": ["unsharp"]
+    },
+    "glow": {
+      "description": "Bloom/halation (S_Glow) — blur gaussien mixe en screen.",
+      "ffmpeg_filters": ["gblur", "blend"]
+    },
+    "grade": {
+      "description": "Color grading multicouche (MB LookSuite3 — ACES 1.0.3 → Rec.709).",
+      "ffmpeg_filters": ["colorbalance", "eq", "curves"]
+    },
+    "finish": {
+      "description": "Sharpen finale legere (S_Sharpen).",
+      "ffmpeg_filters": ["unsharp"]
+    }
+  },
+  "presets": {
+    "silver_gray": {
+      "description": "Gris argenté, contraste métallique, hautes lumières froides.",
+      "layers": {
+        "tonemap": {
+          "enabled": true,
+          "opacity": 1.0,
+          "curves": "0/0 0.15/0.10 0.5/0.55 0.85/0.90 1/1",
+          "brightness": 0.02,
+          "contrast": 1.15,
+          "saturation": 0.55
+        },
+        "sharpen": {
+          "enabled": true,
+          "opacity": 1.0,
+          "pass1_luma": "5:5:0.9",
+          "pass2_luma": "3:3:1.2"
+        },
+        "glow": {
+          "enabled": false,
+          "opacity": 0.0,
+          "sigma": 0,
+          "blend_opacity": 0.0
+        },
+        "grade": {
+          "enabled": true,
+          "opacity": 0.8,
+          "cyan_red": -0.05,
+          "magenta_green": 0.0,
+          "yellow_blue": 0.08,
+          "saturation": 0.60,
+          "gamma": 1.02
+        },
+        "finish": {
+          "enabled": true,
+          "opacity": 0.6,
+          "luma": "3:3:0.4"
+        }
+      }
+    },
+    "dark": {
+      "description": "Sombre et cinématique, noirs profonds, textures préservées.",
+      "layers": {
+        "tonemap": {
+          "enabled": true,
+          "opacity": 1.0,
+          "curves": "0/0 0.10/0.05 0.5/0.45 0.9/0.88 1/1",
+          "brightness": -0.01,
+          "contrast": 1.12,
+          "saturation": 0.90
+        },
+        "sharpen": {
+          "enabled": true,
+          "opacity": 1.0,
+          "pass1_luma": "5:5:0.7",
+          "pass2_luma": "3:3:0.9"
+        },
+        "glow": {
+          "enabled": true,
+          "opacity": 0.15,
+          "sigma": 15,
+          "blend_opacity": 0.15
+        },
+        "grade": {
+          "enabled": true,
+          "opacity": 0.7,
+          "cyan_red": 0.0,
+          "magenta_green": 0.0,
+          "yellow_blue": 0.03,
+          "saturation": 0.92,
+          "gamma": 0.97
+        },
+        "finish": {
+          "enabled": true,
+          "opacity": 0.5,
+          "luma": "3:3:0.3"
+        }
+      }
+    },
+    "warm": {
+      "description": "Tons chair protégés, lumières chaudes, saturation sélective.",
+      "layers": {
+        "tonemap": {
+          "enabled": true,
+          "opacity": 1.0,
+          "curves": "0/0 0.2/0.18 0.5/0.52 0.8/0.82 1/1",
+          "brightness": 0.01,
+          "contrast": 1.06,
+          "saturation": 1.05
+        },
+        "sharpen": {
+          "enabled": true,
+          "opacity": 1.0,
+          "pass1_luma": "5:5:0.6",
+          "pass2_luma": "3:3:0.7"
+        },
+        "glow": {
+          "enabled": false,
+          "opacity": 0.0,
+          "sigma": 0,
+          "blend_opacity": 0.0
+        },
+        "grade": {
+          "enabled": true,
+          "opacity": 0.65,
+          "cyan_red": 0.04,
+          "magenta_green": -0.01,
+          "yellow_blue": -0.03,
+          "saturation": 1.08,
+          "gamma": 1.01
+        },
+        "finish": {
+          "enabled": true,
+          "opacity": 0.4,
+          "luma": "3:3:0.25"
+        }
+      }
+    },
+    "viral_hdr": {
+      "description": "Impact fort, overlay lumineux, glow contrôlé, énergie maximale.",
+      "layers": {
+        "tonemap": {
+          "enabled": true,
+          "opacity": 1.0,
+          "curves": "0/0 0.15/0.08 0.5/0.58 0.85/0.95 1/1",
+          "brightness": 0.03,
+          "contrast": 1.18,
+          "saturation": 0.86
+        },
+        "sharpen": {
+          "enabled": true,
+          "opacity": 1.0,
+          "pass1_luma": "5:5:1.0",
+          "pass2_luma": "3:3:1.4"
+        },
+        "glow": {
+          "enabled": true,
+          "opacity": 0.35,
+          "sigma": 25,
+          "blend_opacity": 0.35
+        },
+        "grade": {
+          "enabled": true,
+          "opacity": 0.9,
+          "cyan_red": -0.02,
+          "magenta_green": 0.01,
+          "yellow_blue": -0.01,
+          "saturation": 0.89,
+          "gamma": 1.03
+        },
+        "finish": {
+          "enabled": true,
+          "opacity": 0.8,
+          "luma": "3:3:0.6"
+        }
+      }
+    },
+    "clean_realistic": {
+      "description": "Finition minimale, priorité au naturel, fidélité source.",
+      "layers": {
+        "tonemap": {
+          "enabled": true,
+          "opacity": 1.0,
+          "curves": "0/0 0.5/0.5 1/1",
+          "brightness": 0.0,
+          "contrast": 1.03,
+          "saturation": 1.0
+        },
+        "sharpen": {
+          "enabled": true,
+          "opacity": 1.0,
+          "pass1_luma": "5:5:0.3",
+          "pass2_luma": "3:3:0.4"
+        },
+        "glow": {
+          "enabled": false,
+          "opacity": 0.0,
+          "sigma": 0,
+          "blend_opacity": 0.0
+        },
+        "grade": {
+          "enabled": false,
+          "opacity": 0.0,
+          "cyan_red": 0.0,
+          "magenta_green": 0.0,
+          "yellow_blue": 0.0,
+          "saturation": 1.0,
+          "gamma": 1.0
+        },
+        "finish": {
+          "enabled": false,
+          "opacity": 0.0,
+          "luma": "3:3:0.0"
+        }
+      }
+    }
+  }
+}

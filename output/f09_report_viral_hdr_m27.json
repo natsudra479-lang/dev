@@ -1,0 +1,33 @@
+{
+  "status": "SUCCEEDED",
+  "preset": "viral_hdr",
+  "input_path": "/tmp/lacrimae_test/v2_original_5s_run2_final.mp4",
+  "input_sha256": "4b7c69736a5df4d715ea4a56052c2f17548ec5f895517a9da293a96c77a5c67d",
+  "output_path": "/tmp/lacrimae_test/v2_final_F09_viral_hdr_m27.mp4",
+  "output_sha256": "de467d0296b7189c4c72db4929c84483c1d19f01786a345b2b719fc86eb1356e",
+  "ffmpeg_filter_chain": "[0:v]curves=master='0/0 0.15/0.08 0.5/0.58 0.85/0.95 1/1',eq=brightness=0.03:contrast=1.18:saturation=0.86,unsharp=5:5:1.0,unsharp=3:3:1.4,colorbalance=rs=-0.02:gs=0.01:bs=-0.01,eq=saturation=0.89:gamma=1.03,unsharp=3:3:0.6,split[main][glow_src];[glow_src]gblur=sigma=25[blurred];[main][blurred]blend=all_mode=screen:all_opacity=0.35",
+  "active_layers": [
+    {
+      "name": "tonemap",
+      "opacity": 1.0
+    },
+    {
+      "name": "sharpen",
+      "opacity": 1.0
+    },
+    {
+      "name": "glow",
+      "opacity": 0.35
+    },
+    {
+      "name": "grade",
+      "opacity": 0.9
+    },
+    {
+      "name": "finish",
+      "opacity": 0.8
+    }
+  ],
+  "elapsed_seconds": 263.617,
+  "created_at": "2026-08-28T11:34:26.063571+00:00"
+}
