@@ -8,9 +8,11 @@ Preview interactif pour F09. Ajuste les paramètres de compositing sur une seule
 Frame (FFmpeg) → Preview UI (React) → Modal (1 frame, $0.001) → Résultat
 ```
 
-1. Extraire une frame de ta vidéo :
+1. Extraire une frame de ta vidéo (en secondes) :
 ```bash
-bash scripts/extract_frame.sh video.mp4 300
+bash scripts/extract_frame.sh video.mp4 5        # frame à 5s
+bash scripts/extract_frame.sh video.mp4 5.25     # frame à 5.25s
+bash scripts/extract_frame.sh video.mp4 frame:300 # frame #300 (legacy)
 ```
 
 2. Lancer le preview UI :

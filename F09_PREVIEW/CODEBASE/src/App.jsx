@@ -351,8 +351,8 @@ export default function App() {
               <div className="grid grid-cols-3 gap-4 text-xs text-[#666]">
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">1. Upload</div>
-                  Extract a frame from your video via FFmpeg:<br />
-                  <code className="text-[10px] text-[#555]">bash scripts/extract_frame.sh video.mp4 300</code>
+                  Extract a frame at N seconds:<br />
+                  <code className="text-[10px] text-[#555]">bash scripts/extract_frame.sh video.mp4 5</code>
                 </div>
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">2. Adjust</div>
