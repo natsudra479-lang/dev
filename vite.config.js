@@ -6,8 +6,13 @@ export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname, 'F09_PREVIEW/CODEBASE'),
   publicDir: path.resolve(__dirname, 'F09_PREVIEW/CODEBASE/public'),
+  base: './',
   server: {
-    host: '0.0.0.0',
-    port: 5173,
+    host: true,
+    allowedHosts: ['.monkeycode-ai.live', '.manus.computer'],
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 });
