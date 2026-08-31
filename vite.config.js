@@ -6,7 +6,7 @@ export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname, 'F09_PREVIEW/CODEBASE'),
   publicDir: path.resolve(__dirname, 'F09_PREVIEW/CODEBASE/public'),
-  base: './',
+  base: process.env.VITE_BASE || './',
   server: {
     host: true,
     allowedHosts: ['.monkeycode-ai.live', '.manus.computer'],
