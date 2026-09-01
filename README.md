@@ -1,139 +1,100 @@
-# LACRIMAE
+# LACRIMAE — Beauty Enhance Pipeline
 
-> *For the Angel's Tears shall become gold.*
+> **Branche dev6-D** — Pipeline vidéo beauté complet : Upscale → Color Grading → Interpolation 120fps
 
-LACRIMAE est un pipeline de production de Shorts verticaux (YouTube/TikTok) avec plusieurs modes de production.
+## Architecture
 
-## Modes de production
-
-| Branche | Mode | Description |
-|---------|------|-------------|
-| dev4 | Fast Match Cut | Montage automatique depuis une vidéo source |
-| dev7 | Hybrid Audio Sync | Intro + Match Cut avec sync audio |
-| dev8 | Reveal Compilation | Others vs This One — clips avec narration |
-| **dev9** | **Ranking Compilation** | **Clips numérotés du rang N au rang 1** |
-
-## Pipeline dev9 — Ranking Compilation
-
-```text
-Clips vidéo + (optionnel) audio
-        │
-        ▼
-F00-E Reveal Clip Prep          F00-MUSIC (optionnel)
-découpe les clips H.264         analyse la musique
-        │                                │
-        ▼                                ▼
-    reveal_sources.json          music.mp3 + music_timeline.json
-        │                                │
-        ├──► F00-F Ranking Prep ◄────────┘
-        │    (classe les clips en rangs)
-        │         │
-        │         ▼
-        │    ranking_manifest.json
-        │         │
-        ▼         ▼
-    F03 PREVIEW (validation interactive)
-        │
-        ▼
-    F04 SIGNUM (render Remotion → short_final.mp4)
-        │
-        ▼
-    F05 CAMOUFLAGE → F06 LUTHER
-        │
-        ▼
-    short_master.mp4 (livrable)
+```
+F00_INGEST    → Extraction & ingest vidéo
+F01_CANTOR    → Analyse audio/temporelle
+F02_VISIO     → Vision par ordinateur
+F03_PICTOR    → Composition Remotion
+F03_AI        → 🆕 Workers Modal — Pipeline beauté
+F03_PREVIEW   → Preview Remotion
+F04_SIGNUM    → Signature visuelle
+F05_CAMOUFLAGE→ Camouflage/fusion
+F06_LUTHER    → Audio final
+F09_PREVIEW   → 🆕 Preview UI — 14 sliders, Canvas client-side
 ```
 
-## Frégates dev9
+## F03_AI — Pipeline Beauté Modal
 
-| Étape | Nom | Mission | Sortie |
-|-------|-----|---------|--------|
-| **F00-E** | Reveal Clip Prep | Découpe les clips vidéo (H.264, 30fps) | `reveal_sources.json` + `clips/*.mp4` |
-| **F00-F** | Ranking Prep | Classe les clips en rangs | `ranking_manifest.json` |
-| **F00-MUSIC** | Audio Analysis | Analyse la musique (optionnel) | `music.mp3` |
-| **F03** | Preview | Visualisation interactive du ranking | `codex.json` validé |
-| **F04** | Signum | Rendu Remotion → MP4 | `short_final.mp4` |
-| **F05** | Camouflage | Réencodage H.264 yuv420p, faststart | `short_camouflaged.mp4` |
-| **F06** | Luther | Nettoyage métadonnées | `short_master.mp4` |
+3 workers GPU en série, ~$0.024 pour 5 secondes :
 
-## Format du Codex (ranking_compilation)
+| Worker | App Modal | GPU | Rôle |
+|---|---|---|---|
+| Upscale | `lac-upscale` | A10G | DiffBIR upscale 2× |
+| Color Grading | `lac-vcg` | A10G | LUT ACES + grading |
+| Interpolation | `lac-amt` | A10G | RIFE ×4 → 120fps |
 
-```json
-{
-  "review_mode": "ranking_compilation",
-  "ranking_manifest": {
-    "narrative": {
-      "title_words": [
-        { "text": "SPIDER-MAN", "color": "#FF4444" },
-        { "text": "RANKING", "color": "#FFFFFF" }
-      ],
-      "global_controls": {
-        "title_scale": 1,
-        "number_scale": 2.3,
-        "label_scale": 2.35,
-        "clip_audio": true,
-        "list_x_pct": 5,
-        "list_y_pct": 95,
-        "title_size": 42
-      }
-    },
-    "entries": [
-      {
-        "rank": 4,
-        "label_words": [{ "text": "CLIP", "color": "#FFFFFF" }],
-        "number_color": "#FF4444",
-        "number_size": 42,
-        "label_size": 22,
-        "duration_seconds": 6,
-        "sfx": { "enabled": true, "file": "sfx/impact.mp3" }
-      }
-    ]
-  }
-}
-```
-
-## Workflows GitHub Actions
-
-| Workflow | Branche | Rôle |
-|----------|---------|------|
-| `dev9_spiderman_ranking.yml` | dev9 | F00-E + F00-F (clips + ranking) |
-| `dev9_spiderman_render.yml` | dev9 | F04 render (clips + ranking → MP4) |
-
-## Quickstart
+### Quick Start
 
 ```bash
-cd F03_PREVIEW/CODEBASE
-npm ci
-npm run dev
+# Extraire une frame
+bash scripts/extract_frame.sh video.mp4 4
+
+# Lancer le pipeline complet
+python3 F03_AI/workers/orchestrator.py \
+  --input input.mp4 \
+  --reference frame.png \
+  --output output.mp4 \
+  --preset beauty
 ```
 
-## Rendu F04
+### Presets
 
-```bash
-cd F03_PREVIEW/CODEBASE
-npm ci
-npm run build
-npm run render
-# → out/short_final.mp4
+| Preset | Sharpen | Contrast | Sat | Glow | Warmth |
+|---|---|---|---|---|---|
+| Beauty | 1.5 | 1.1 | 1.08 | 0.35 | 1.0 |
+| Demon | 1.8 | 1.3 | 1.4 | 0.6 | 1.1 |
+| Cinema | 0.8 | 1.05 | 1.05 | 0.3 | 0.98 |
+| Crunchy | 1.5 | 1.15 | 1.1 | 0.4 | 1.02 |
+| Clean | 0.5 | 1.03 | 1.0 | 0.15 | 1.0 |
+
+## F09_PREVIEW — Preview UI
+
+14 sliders client-side (zéro coût) :
+
+🔧 **RESTORE (Topaz)** — Compression Fix, Detail Enhance, Detail Reveal, Denoise, Dehalo
+
+🎨 **STYLE (AE)** — Sharpen, Sharpen Width, Edge Threshold, Contrast, Saturation, Warmth, Glow, Glow Width
+
+🌐 **Live** : https://natsudra479-lang.github.io/dev/
+
+## Structure
+
+```
+LACRIMAE/
+├── F03_AI/                  ← Workers Modal (Python)
+│   ├── workers/             ← 8 fichiers .py
+│   └── PRESETS/             ← JSON presets
+├── F09_PREVIEW/             ← Preview UI (React + Vite)
+│   └── CODEBASE/
+├── CONFIG/
+│   ├── atom_ic_compositing.json
+│   ├── atom_ic_profiles.json
+│   └── atom_ic_preview.json ← Bornes sliders
+├── scripts/
+│   └── extract_frame.sh     ← Extraction FFmpeg
+├── modal/                   ← Config Modal deploy
+├── SHARED/                  ← Code partagé
+├── TRACKING/                ← Documentation
+└── tools/                   ← Utils
 ```
 
-Ou via GitHub Actions : **DEV9 — Spider-Man Ranking Render**.
+## Coût
 
-## Release
+| Action | Coût |
+|---|---|
+| 1 preview (1 frame, Canvas) | $0 |
+| 1 run complet (5s vidéo) | ~$0.024 |
+| 1 run complet (20s vidéo) | ~$0.064 |
+| 10 itérations via preview | ~$0.01 |
+| **Total itération optimisée** | **~$0.034** |
 
-Le master final est sur :
+## Stack
 
-```
-https://github.com/kioka8877-ux/LACRIMAE/releases/download/f04_f05_f06_spiderman_master/short_master.mp4
-```
-
-## Notes techniques
-
-- **Clips** : Doivent être H.264 (pas H.265/HEVC) — Chrome Headless ne supporte pas HEVC
-- **Audio clips** : F00-E garde l'audio d'origine (`-an` retiré)
-- **SFX** : Chaque rang peut avoir un son de transition (impact.mp3, king_reveal.mp3)
-- **Numéros** : Permanent dans le temps (visibles de début en fin)
-- **Labels** : Apparaissent du bas vers le haut (rank N → rank 1)
-- **Rang 1** : Toujours le dernier, avec effet spécial (glow doré)
-- **Titre** : Word-by-word avec couleur par mot, position configurable
-- **Pas de musique de fond** : Contrairement à dev8, dev9 n'a pas de musique de fond
+- **Backend** : Modal (Python, GPU A10G)
+- **Frontend** : React + Vite + Tailwind
+- **Processing** : OpenCV, DiffBIR, RIFE, VCG
+- **Preview** : Canvas API (client-side, zéro serveur)

@@ -11,6 +11,24 @@ F00_INGEST/IN/video_source.mp4
 F00_INGEST/OUT/video_source.mp4
 F03_PICTOR/CODEBASE/public/*.mp4
 F03_PREVIEW/CODEBASE/public/video_source.mp4
+*.mp4
+*.mkv
+*.avi
+*.mov
+
+# F09 Preview build artifacts
+F09_PREVIEW/CODEBASE/dist/
+F09_PREVIEW/CODEBASE/public/preview/
+F09_PREVIEW/CODEBASE/public/frame*.png
+
+# Test artifacts
+F03_AI/.test/
+*.egg-info/
+
+# Environment
+.env
+.env.local
+.env.modal
 
 # Local logs and caches
 *.log
