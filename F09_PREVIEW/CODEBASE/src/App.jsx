@@ -591,13 +591,13 @@ export default function App() {
                   </div>
                 </div>
               ) : (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">Original</div>
+                <div className="flex gap-4">
+                  <div className="w-1/4 flex-shrink-0">
+                    <div className="text-[10px] text-[#666] mb-1 text-center uppercase tracking-wider">Original</div>
                     <img src={originalUrl} alt="Original" className="w-full rounded-lg border border-[#222]" />
                   </div>
-                  <div>
-                    <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-[#c9a84c] mb-1 text-center uppercase tracking-wider font-semibold">
                       {loading ? 'Processing...' : 'Preview'}
                     </div>
                     {previewUrl ? (
