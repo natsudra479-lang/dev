@@ -1,72 +1,268 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 /* ── Config ───────────────────────────────────────────── */
-const SLIDERS = [
-  { key: 'sharpen',    min: 0.0, max: 3.0, step: 0.05, label: 'Sharpen',    unit: 'x' },
-  { key: 'contrast',   min: 0.5, max: 2.0, step: 0.05, label: 'Contrast',   unit: 'x' },
-  { key: 'saturation', min: 0.0, max: 2.0, step: 0.05, label: 'Saturation', unit: 'x' },
-  { key: 'glow',       min: 0.0, max: 1.0, step: 0.05, label: 'Glow',       unit: 'x' },
-  { key: 'warmth',     min: 0.5, max: 1.5, step: 0.05, label: 'Warmth',     unit: 'x' },
-];
-
-const PRESETS = {
-  beauty:    { sharpen: 1.5, contrast: 1.1,  saturation: 1.08, glow: 0.35, warmth: 1.0,  label: 'Beauty',    icon: '\u2726' },
-  demon:     { sharpen: 1.8, contrast: 1.3,  saturation: 1.4,  glow: 0.6,  warmth: 1.1,  label: 'Demon',     icon: '\uD83D\uDD25' },
-  cinema:    { sharpen: 0.8, contrast: 1.05, saturation: 1.05, glow: 0.3,  warmth: 0.98, label: 'Cinema',    icon: '\uD83C\uDFAC' },
-  crunchy:   { sharpen: 1.5, contrast: 1.15, saturation: 1.1,  glow: 0.4,  warmth: 1.02, label: 'Crunchy',   icon: '\uD83D\uDC8E' },
-  clean:     { sharpen: 0.5, contrast: 1.03, saturation: 1.0,  glow: 0.15, warmth: 1.0,  label: 'Clean',     icon: '\u25FB' },
+const SECTIONS = {
+  restore: {
+    label: 'RESTORE (Topaz)',
+    icon: '\uD83D\uDD27',
+    sliders: [
+      { key: 'compressionFix', min: 0, max: 100, step: 1, label: 'Compression Fix', unit: '%' },
+      { key: 'detailEnhance',  min: 0, max: 100, step: 1, label: 'Detail Enhance',  unit: '%' },
+      { key: 'detailReveal',   min: 0, max: 100, step: 1, label: 'Detail Reveal',   unit: '%' },
+      { key: 'denoise',        min: 0, max: 100, step: 1, label: 'Denoise',          unit: '%' },
+      { key: 'dehalo',         min: 0, max: 100, step: 1, label: 'Dehalo',           unit: '%' },
+    ],
+  },
+  style: {
+    label: 'STYLE (AE)',
+    icon: '\uD83C\uDFA8',
+    sliders: [
+      { key: 'sharpenIntensity', min: 0.0, max: 3.0, step: 0.05, label: 'Sharpen',       unit: 'x' },
+      { key: 'sharpenWidth',     min: 0.5, max: 5.0, step: 0.1,  label: 'Sharpen Width', unit: 'px' },
+      { key: 'edgeThreshold',    min: 0,   max: 100, step: 1,    label: 'Edge Threshold', unit: '' },
+      { key: 'contrast',         min: 0.5, max: 2.0, step: 0.05, label: 'Contrast',      unit: 'x' },
+      { key: 'saturation',       min: 0.0, max: 2.0, step: 0.05, label: 'Saturation',    unit: 'x' },
+      { key: 'warmth',           min: 0.5, max: 1.5, step: 0.05, label: 'Warmth',        unit: 'x' },
+      { key: 'glowIntensity',    min: 0.0, max: 1.0, step: 0.05, label: 'Glow',          unit: 'x' },
+      { key: 'glowWidth',        min: 5,   max: 80,  step: 1,    label: 'Glow Width',    unit: 'px' },
+    ],
+  },
 };
 
-const DEFAULTS = { sharpen: 1.5, contrast: 1.1, saturation: 1.08, glow: 0.35, warmth: 1.0 };
+const PRESETS = {
+  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, label: 'Beauty',  icon: '\u2726' },
+  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, label: 'Demon',   icon: '\uD83D\uDD25' },
+  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, label: 'Cinema',  icon: '\uD83C\uDFAC' },
+  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, label: 'Crunchy', icon: '\uD83D\uDC8E' },
+  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, label: 'Clean',   icon: '\u25FB' },
+};
 
-/* ── Canvas Image Processing ──────────────────────────── */
-function processImage(canvas, ctx, img, params) {
+const DEFAULTS = PRESETS.beauty;
+
+/* ── Canvas Processing ─────────────────────────────────── */
+
+// Box blur helper
+function boxBlur(srcData, w, h, radius) {
+  const dst = new Uint8ClampedArray(srcData.length);
+  const r = Math.max(1, Math.round(radius));
+  // Horizontal pass
+  const tmp = new Uint8ClampedArray(srcData.length);
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      for (let dx = -r; dx <= r; dx++) {
+        const px = Math.min(w - 1, Math.max(0, x + dx));
+        const i = (y * w + px) * 4;
+        rSum += srcData[i]; gSum += srcData[i+1]; bSum += srcData[i+2];
+        count++;
+      }
+      const i = (y * w + x) * 4;
+      tmp[i] = rSum/count; tmp[i+1] = gSum/count; tmp[i+2] = bSum/count; tmp[i+3] = srcData[i+3];
+    }
+  }
+  // Vertical pass
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      for (let dy = -r; dy <= r; dy++) {
+        const py = Math.min(h - 1, Math.max(0, y + dy));
+        const i = (py * w + x) * 4;
+        rSum += tmp[i]; gSum += tmp[i+1]; bSum += tmp[i+2];
+        count++;
+      }
+      const i = (y * w + x) * 4;
+      dst[i] = rSum/count; dst[i+1] = gSum/count; dst[i+2] = bSum/count; dst[i+3] = tmp[i+3];
+    }
+  }
+  return dst;
+}
+
+// Sobel edge magnitude (0-255)
+function computeEdgeMap(luma, w, h) {
+  const edges = new Float32Array(w * h);
+  for (let y = 1; y < h-1; y++) {
+    for (let x = 1; x < w-1; x++) {
+      const idx = y * w + x;
+      const gx = -luma[(y-1)*w+x-1] + luma[(y-1)*w+x+1]
+                - 2*luma[y*w+x-1] + 2*luma[y*w+x+1]
+                - luma[(y+1)*w+x-1] + luma[(y+1)*w+x+1];
+      const gy = -luma[(y-1)*w+x-1] - 2*luma[(y-1)*w+x] - luma[(y-1)*w+x+1]
+                + luma[(y+1)*w+x-1] + 2*luma[(y+1)*w+x] + luma[(y+1)*w+x+1];
+      edges[idx] = Math.sqrt(gx*gx + gy*gy);
+    }
+  }
+  return edges;
+}
+
+function processImage(canvas, ctx, img, p) {
   const w = img.naturalWidth || img.width;
   const h = img.naturalHeight || img.height;
-
   canvas.width = w;
   canvas.height = h;
   ctx.drawImage(img, 0, 0, w, h);
 
   let imageData = ctx.getImageData(0, 0, w, h);
-  let data = imageData.data;
+  let d = imageData.data;
 
-  // 1. CONTRAST + BRIGHTNESS
-  const contrast = params.contrast;
-  const intercept = 128 * (1 - contrast);
-  if (contrast !== 1.0) {
-    for (let i = 0; i < data.length; i += 4) {
-      data[i]     = Math.min(255, Math.max(0, data[i] * contrast + intercept));
-      data[i + 1] = Math.min(255, Math.max(0, data[i + 1] * contrast + intercept));
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] * contrast + intercept));
+  // ═══════════════════════════════════════════════════════
+  // TOPAZ RESTORE — simulated via OpenCV-like ops
+  // ═══════════════════════════════════════════════════════
+
+  // Denoise: bilateral-like (smooth flat areas, keep edges)
+  if (p.denoise > 0) {
+    const strength = p.denoise / 100;
+    const blurred = boxBlur(d, w, h, Math.round(1 + strength * 3));
+    for (let i = 0; i < d.length; i += 4) {
+      const mix = strength * 0.4;
+      d[i]   = d[i]   * (1-mix) + blurred[i]   * mix;
+      d[i+1] = d[i+1] * (1-mix) + blurred[i+1] * mix;
+      d[i+2] = d[i+2] * (1-mix) + blurred[i+2] * mix;
     }
   }
 
-  // 2. SATURATION
-  const sat = params.saturation;
-  if (sat !== 1.0) {
-    for (let i = 0; i < data.length; i += 4) {
-      const gray = 0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2];
-      data[i]     = Math.min(255, Math.max(0, gray + sat * (data[i] - gray)));
-      data[i + 1] = Math.min(255, Math.max(0, gray + sat * (data[i + 1] - gray)));
-      data[i + 2] = Math.min(255, Math.max(0, gray + sat * (data[i + 2] - gray)));
+  // Compression Fix: subtle local contrast boost (removes block artifacts)
+  if (p.compressionFix > 0) {
+    const strength = p.compressionFix / 100;
+    const blurred = boxBlur(d, w, h, 2);
+    for (let i = 0; i < d.length; i += 4) {
+      const detail = (d[i] - blurred[i]) * (0.5 + strength * 0.5);
+      d[i]   = Math.min(255, Math.max(0, d[i] + detail * 0.3));
+      d[i+1] = Math.min(255, Math.max(0, d[i+1] + detail * 0.3));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] + detail * 0.3));
     }
   }
 
-  // 3. WARMTH (shift reds up, blues down)
-  const warmth = params.warmth;
-  if (warmth !== 1.0) {
-    const shift = (warmth - 1.0) * 30;
-    for (let i = 0; i < data.length; i += 4) {
-      data[i]     = Math.min(255, Math.max(0, data[i] + shift));         // Red +
-      data[i + 2] = Math.min(255, Math.max(0, data[i + 2] - shift * 0.5)); // Blue -
+  // Detail Enhance: unsharp mask with wider kernel
+  if (p.detailEnhance > 0) {
+    const amount = p.detailEnhance / 100 * 0.8;
+    const blurred = boxBlur(d, w, h, 3);
+    for (let i = 0; i < d.length; i += 4) {
+      d[i]   = Math.min(255, Math.max(0, d[i]   + (d[i]   - blurred[i])   * amount));
+      d[i+1] = Math.min(255, Math.max(0, d[i+1] + (d[i+1] - blurred[i+1]) * amount));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] + (d[i+2] - blurred[i+2]) * amount));
+    }
+  }
+
+  // Detail Reveal: high-pass detail boost
+  if (p.detailReveal > 0) {
+    const amount = p.detailReveal / 100 * 0.6;
+    const blurred = boxBlur(d, w, h, 5);
+    for (let i = 0; i < d.length; i += 4) {
+      const hp = d[i] - blurred[i];
+      d[i]   = Math.min(255, Math.max(0, d[i]   + hp * amount * 1.2));
+      d[i+1] = Math.min(255, Math.max(0, d[i+1] + hp * amount * 1.2));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] + hp * amount * 1.2));
+    }
+  }
+
+  // Dehalo: reduce ringing around edges
+  if (p.dehalo > 0) {
+    const strength = p.dehalo / 100;
+    const blurred = boxBlur(d, w, h, 2);
+    for (let i = 0; i < d.length; i += 4) {
+      const diff = d[i] - blurred[i];
+      if (Math.abs(diff) > 40) {
+        const reduce = strength * 0.15;
+        d[i]   = Math.min(255, Math.max(0, d[i] - diff * reduce));
+        d[i+1] = Math.min(255, Math.max(0, d[i+1] - diff * reduce));
+        d[i+2] = Math.min(255, Math.max(0, d[i+2] - diff * reduce));
+      }
+    }
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // AE STYLE
+  // ═══════════════════════════════════════════════════════
+
+  // Contrast
+  if (p.contrast !== 1.0) {
+    const c = p.contrast;
+    const intercept = 128 * (1 - c);
+    for (let i = 0; i < d.length; i += 4) {
+      d[i]   = Math.min(255, Math.max(0, d[i] * c + intercept));
+      d[i+1] = Math.min(255, Math.max(0, d[i+1] * c + intercept));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] * c + intercept));
+    }
+  }
+
+  // Saturation
+  if (p.saturation !== 1.0) {
+    for (let i = 0; i < d.length; i += 4) {
+      const gray = 0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2];
+      d[i]   = Math.min(255, Math.max(0, gray + p.saturation * (d[i] - gray)));
+      d[i+1] = Math.min(255, Math.max(0, gray + p.saturation * (d[i+1] - gray)));
+      d[i+2] = Math.min(255, Math.max(0, gray + p.saturation * (d[i+2] - gray)));
+    }
+  }
+
+  // Warmth
+  if (p.warmth !== 1.0) {
+    const shift = (p.warmth - 1.0) * 30;
+    for (let i = 0; i < d.length; i += 4) {
+      d[i]   = Math.min(255, Math.max(0, d[i] + shift));
+      d[i+2] = Math.min(255, Math.max(0, d[i+2] - shift * 0.5));
     }
   }
 
   ctx.putImageData(imageData, 0, 0);
 
-  // 4. GLOW (bloom on highlights)
-  if (params.glow > 0) {
+  // ═══════════════════════════════════════════════════════
+  // MULTI-SCALE SHARPEN (Luma-only, Edge-aware)
+  // ═══════════════════════════════════════════════════════
+  if (p.sharpenIntensity > 0) {
+    const currentData = ctx.getImageData(0, 0, w, h);
+    const cd = currentData.data;
+
+    // Compute luma
+    const luma = new Float32Array(w * h);
+    for (let i = 0; i < cd.length; i += 4) {
+      luma[i/4] = 0.2126 * cd[i] + 0.7152 * cd[i+1] + 0.0722 * cd[i+2];
+    }
+
+    // Edge map
+    const edges = computeEdgeMap(luma, w, h);
+    const edgeMax = Math.max(...edges) || 1;
+
+    // Multi-scale blur kernels based on sharpenWidth
+    const baseR = Math.max(1, Math.round(p.sharpenWidth));
+    const blur1 = boxBlur(cd, w, h, Math.max(1, baseR));
+    const blur2 = boxBlur(cd, w, h, Math.max(1, baseR * 2));
+    const blur3 = boxBlur(cd, w, h, Math.max(1, baseR * 4));
+
+    const threshold = p.edgeThreshold / 100; // 0 = sharpen all, 1 = sharpen nothing
+    const amount = p.sharpenIntensity * 0.35;
+
+    for (let i = 0; i < cd.length; i += 4) {
+      const px = (i / 4) % w;
+      const py = Math.floor((i / 4) / w);
+      const edgeVal = edges[py * w + px] / edgeMax;
+      const edgeMask = threshold > 0
+        ? Math.max(0, Math.min(1, (edgeVal - threshold * 0.3) / (threshold * 0.7 + 0.001)))
+        : 1.0;
+
+      // Multi-scale: fine + medium + coarse detail
+      const detail1 = cd[i]   - blur1[i];
+      const detail2 = blur1[i] - blur2[i];
+      const detail3 = blur2[i] - blur3[i];
+      const sharpened = detail1 * 1.0 + detail2 * 0.5 + detail3 * 0.2;
+
+      // Luma-only: apply to all channels proportionally
+      const lumaVal = luma[i/4] || 1;
+      const factor = (lumaVal > 0) ? sharpened / lumaVal : 0;
+      const apply = amount * edgeMask * factor;
+
+      cd[i]   = Math.min(255, Math.max(0, cd[i]   + sharpened * amount * edgeMask));
+      cd[i+1] = Math.min(255, Math.max(0, cd[i+1] + sharpened * amount * edgeMask));
+      cd[i+2] = Math.min(255, Math.max(0, cd[i+2] + sharpened * amount * edgeMask));
+    }
+
+    ctx.putImageData(currentData, 0, 0);
+  }
+
+  // ═══════════════════════════════════════════════════════
+  // GLOW (screen blend, highlight extraction)
+  // ═══════════════════════════════════════════════════════
+  if (p.glowIntensity > 0) {
     const glowCanvas = document.createElement('canvas');
     glowCanvas.width = w;
     glowCanvas.height = h;
@@ -74,58 +270,27 @@ function processImage(canvas, ctx, img, params) {
     glowCtx.drawImage(canvas, 0, 0);
 
     // Extract highlights
-    const glowData = glowCtx.getImageData(0, 0, w, h);
-    const gd = glowData.data;
-    for (let i = 0; i < gd.length; i += 4) {
-      const lum = 0.2126 * gd[i] + 0.7152 * gd[i + 1] + 0.0722 * gd[i + 2];
-      if (lum < 180) {
-        gd[i] = gd[i + 1] = gd[i + 2] = 0;
-        gd[i + 3] = 0;
+    const gd = glowCtx.getImageData(0, 0, w, h);
+    const gdata = gd.data;
+    for (let i = 0; i < gdata.length; i += 4) {
+      const lum = 0.2126 * gdata[i] + 0.7152 * gdata[i+1] + 0.0722 * gdata[i+2];
+      if (lum < 160) {
+        gdata[i] = gdata[i+1] = gdata[i+2] = 0;
+        gdata[i+3] = 0;
       } else {
-        gd[i + 3] = Math.min(255, (lum - 180) * 3);
+        gdata[i+3] = Math.min(255, (lum - 160) * 2.5);
       }
     }
-    glowCtx.putImageData(glowData, 0, 0);
+    glowCtx.putImageData(gd, 0, 0);
 
-    // Blur the highlights
-    ctx.filter = `blur(${Math.round(15 + params.glow * 20)}px)`;
-    ctx.globalAlpha = params.glow * 0.6;
+    // Blur highlights
+    ctx.filter = `blur(${Math.round(p.glowWidth)}px)`;
+    ctx.globalAlpha = p.glowIntensity * 0.5;
     ctx.globalCompositeOperation = 'screen';
     ctx.drawImage(glowCanvas, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1.0;
     ctx.globalCompositeOperation = 'source-over';
-  }
-
-  // 5. SHARPEN (unsharp mask)
-  if (params.sharpen > 0) {
-    const amount = (params.sharpen - 1.0) * 0.5;
-    if (amount > 0) {
-      const srcData = ctx.getImageData(0, 0, w, h);
-      const src = srcData.data;
-      const sharpCanvas = document.createElement('canvas');
-      sharpCanvas.width = w;
-      sharpCanvas.height = h;
-      const sharpCtx = sharpCanvas.getContext('2d');
-      sharpCtx.drawImage(canvas, 0, 0);
-
-      const blurCanvas = document.createElement('canvas');
-      blurCanvas.width = w;
-      blurCanvas.height = h;
-      const blurCtx = blurCanvas.getContext('2d');
-      blurCtx.filter = 'blur(1px)';
-      blurCtx.drawImage(canvas, 0, 0);
-      const blurData = blurCtx.getImageData(0, 0, w, h);
-      const bd = blurData.data;
-
-      for (let i = 0; i < src.length; i += 4) {
-        src[i]     = Math.min(255, Math.max(0, src[i] + (src[i] - bd[i]) * amount));
-        src[i + 1] = Math.min(255, Math.max(0, src[i + 1] + (src[i + 1] - bd[i + 1]) * amount));
-        src[i + 2] = Math.min(255, Math.max(0, src[i + 2] + (src[i + 2] - bd[i + 2]) * amount));
-      }
-
-      ctx.putImageData(srcData, 0, 0);
-    }
   }
 
   return canvas.toDataURL('image/png');
@@ -135,8 +300,8 @@ function processImage(canvas, ctx, img, params) {
 function Slider({ config, value, onChange }) {
   const pct = ((value - config.min) / (config.max - config.min)) * 100;
   return (
-    <div className="flex items-center gap-4 group">
-      <label className="w-24 text-xs font-semibold tracking-wider uppercase text-[#888] group-hover:text-[#c9a84c] transition-colors">
+    <div className="flex items-center gap-3 group">
+      <label className="w-32 text-[11px] font-semibold tracking-wider uppercase text-[#888] group-hover:text-[#c9a84c] transition-colors">
         {config.label}
       </label>
       <div className="flex-1 relative">
@@ -147,15 +312,38 @@ function Slider({ config, value, onChange }) {
           step={config.step}
           value={value}
           onChange={(e) => onChange(config.key, parseFloat(e.target.value))}
-          className="w-full"
-          style={{
-            background: `linear-gradient(to right, #c9a84c ${pct}%, #333 ${pct}%)`,
-          }}
+          className="w-full cursor-pointer"
+          style={{ background: `linear-gradient(to right, #c9a84c ${pct}%, #333 ${pct}%)` }}
         />
       </div>
-      <span className="w-14 text-right text-sm font-mono text-[#c9a84c]">
-        {value.toFixed(2)}{config.unit}
+      <span className="w-14 text-right text-xs font-mono text-[#c9a84c]">
+        {typeof value === 'number' && value % 1 !== 0 ? value.toFixed(2) : Math.round(value)}{config.unit}
       </span>
+    </div>
+  );
+}
+
+/* ── Section (collapsible) ────────────────────────────── */
+function Section({ sectionKey, section, values, onChange, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="bg-[#161616] border border-[#222] rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-[#1a1a1a] transition-colors"
+      >
+        <span className="text-xs font-bold tracking-wider uppercase text-[#c9a84c]">
+          {section.icon} {section.label}
+        </span>
+        <span className="text-[#666] text-sm">{open ? '\u2212' : '+'}</span>
+      </button>
+      {open && (
+        <div className="px-4 pb-4 space-y-3">
+          {section.sliders.map((s) => (
+            <Slider key={s.key} config={s} value={values[s.key]} onChange={onChange} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -185,9 +373,25 @@ function PresetBar({ active, onSelect }) {
 function ExportPanel({ params }) {
   const config = {
     f09_preview: {
-      version: '1.0.0',
+      version: '2.0.0',
       generated: new Date().toISOString(),
-      params: { ...params },
+      restore: {
+        compressionFix: params.compressionFix,
+        detailEnhance: params.detailEnhance,
+        detailReveal: params.detailReveal,
+        denoise: params.denoise,
+        dehalo: params.dehalo,
+      },
+      style: {
+        sharpenIntensity: params.sharpenIntensity,
+        sharpenWidth: params.sharpenWidth,
+        edgeThreshold: params.edgeThreshold,
+        contrast: params.contrast,
+        saturation: params.saturation,
+        warmth: params.warmth,
+        glowIntensity: params.glowIntensity,
+        glowWidth: params.glowWidth,
+      },
     },
   };
   const json = JSON.stringify(config, null, 2);
@@ -197,7 +401,7 @@ function ExportPanel({ params }) {
       <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-3">
         Export Config
       </h3>
-      <pre className="text-xs text-[#c9a84c] bg-[#0a0a0a] rounded p-3 overflow-auto max-h-40 mb-3 font-mono">
+      <pre className="text-xs text-[#c9a84c] bg-[#0a0a0a] rounded p-3 overflow-auto max-h-48 mb-3 font-mono">
         {json}
       </pre>
       <div className="flex gap-2">
@@ -237,26 +441,9 @@ export default function App() {
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
 
-  // Load image when file changes
-  useEffect(() => {
-    if (!frameFile) return;
-    const url = URL.createObjectURL(frameFile);
-    originalUrlRef.current = url;
-
-    const img = new Image();
-    img.onload = () => {
-      imgRef.current = img;
-      // Auto-run with current params
-      runProcessing(img, params);
-    };
-    img.src = url;
-  }, [frameFile]);
-
   const runProcessing = useCallback((img, p) => {
     if (!img) return;
     setLoading(true);
-
-    // Use requestAnimationFrame for non-blocking
     requestAnimationFrame(() => {
       const canvas = canvasRef.current || document.createElement('canvas');
       if (!canvasRef.current) canvasRef.current = canvas;
@@ -267,7 +454,18 @@ export default function App() {
     });
   }, []);
 
-  // Re-process when params change (if image is loaded)
+  useEffect(() => {
+    if (!frameFile) return;
+    const url = URL.createObjectURL(frameFile);
+    originalUrlRef.current = url;
+    const img = new Image();
+    img.onload = () => {
+      imgRef.current = img;
+      runProcessing(img, params);
+    };
+    img.src = url;
+  }, [frameFile]);
+
   useEffect(() => {
     if (imgRef.current) {
       runProcessing(imgRef.current, params);
@@ -281,13 +479,7 @@ export default function App() {
 
   const handlePreset = useCallback((key) => {
     const p = PRESETS[key];
-    setParams({
-      sharpen: p.sharpen,
-      contrast: p.contrast,
-      saturation: p.saturation,
-      glow: p.glow,
-      warmth: p.warmth,
-    });
+    setParams({ ...p });
     setActivePreset(key);
   }, []);
 
@@ -303,7 +495,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
-      {/* Header */}
       <header className="border-b border-[#222] px-6 py-4">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div>
@@ -311,11 +502,11 @@ export default function App() {
               <span className="text-[#c9a84c]">F09</span> AETHER COMPOSITUM
             </h1>
             <p className="text-xs text-[#666] mt-0.5">
-              Preview — Client-side processing, instant results
+              Preview v2 — Topaz Restore + AE Style — 14 parameters
             </p>
           </div>
           <div className="text-xs text-[#444]">
-            100% Browser • Zero cost
+            100% Browser &bull; Zero cost
           </div>
         </div>
       </header>
@@ -323,19 +514,14 @@ export default function App() {
       <div className="max-w-7xl mx-auto px-6 py-6">
         <div className="grid grid-cols-12 gap-6">
           {/* Left: Controls */}
-          <div className="col-span-4 space-y-6">
+          <div className="col-span-4 space-y-4">
             {/* Frame Upload */}
             <div className="bg-[#161616] border border-[#222] rounded-lg p-4">
               <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-3">
                 Source Frame
               </h3>
-              <label className="block w-full py-6 border-2 border-dashed border-[#333] hover:border-[#c9a84c] rounded-lg text-center cursor-pointer transition-colors">
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFrameUpload}
-                  className="hidden"
-                />
+              <label className="block w-full py-5 border-2 border-dashed border-[#333] hover:border-[#c9a84c] rounded-lg text-center cursor-pointer transition-colors">
+                <input type="file" accept="image/*" onChange={handleFrameUpload} className="hidden" />
                 {frameFile ? (
                   <span className="text-sm text-[#c9a84c]">{frameFile.name}</span>
                 ) : (
@@ -352,20 +538,17 @@ export default function App() {
               <PresetBar active={activePreset} onSelect={handlePreset} />
             </div>
 
-            {/* Sliders */}
-            <div className="bg-[#161616] border border-[#222] rounded-lg p-4 space-y-4">
-              <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-1">
-                Parameters
-              </h3>
-              {SLIDERS.map((s) => (
-                <Slider
-                  key={s.key}
-                  config={s}
-                  value={params[s.key]}
-                  onChange={handleChange}
-                />
-              ))}
-            </div>
+            {/* Sections */}
+            {Object.entries(SECTIONS).map(([key, section], i) => (
+              <Section
+                key={key}
+                sectionKey={key}
+                section={section}
+                values={params}
+                onChange={handleChange}
+                defaultOpen={i === 1}
+              />
+            ))}
 
             {loading && (
               <div className="w-full py-3 bg-[#222] text-[#c9a84c] font-bold rounded-lg text-center tracking-wider uppercase text-sm animate-pulse">
@@ -377,47 +560,31 @@ export default function App() {
             <ExportPanel params={params} />
           </div>
 
-          {/* Right: Preview Comparison */}
+          {/* Right: Preview */}
           <div className="col-span-8">
             <div className="bg-[#161616] border border-[#222] rounded-lg p-4">
               <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-4">
                 Preview Comparison
               </h3>
-
               {!frameFile ? (
                 <div className="aspect-video bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-dashed border-[#222]">
                   <div className="text-center">
                     <div className="text-4xl mb-3 opacity-30">{'\u2726'}</div>
-                    <p className="text-sm text-[#444]">
-                      Upload a frame to start previewing
-                    </p>
-                    <p className="text-xs text-[#333] mt-2">
-                      Or use: bash scripts/extract_frame.sh video.mp4 4
-                    </p>
+                    <p className="text-sm text-[#444]">Upload a frame to start previewing</p>
                   </div>
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">
-                      Original
-                    </div>
-                    <img
-                      src={originalUrl}
-                      alt="Original frame"
-                      className="w-full rounded-lg border border-[#222]"
-                    />
+                    <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">Original</div>
+                    <img src={originalUrl} alt="Original" className="w-full rounded-lg border border-[#222]" />
                   </div>
                   <div>
                     <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">
                       {loading ? 'Processing...' : 'Preview'}
                     </div>
                     {previewUrl ? (
-                      <img
-                        src={previewUrl}
-                        alt="Preview frame"
-                        className="w-full rounded-lg border border-[#c9a84c]/30"
-                      />
+                      <img src={previewUrl} alt="Preview" className="w-full rounded-lg border border-[#c9a84c]/30" />
                     ) : (
                       <div className="aspect-video bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-dashed border-[#222]">
                         <p className="text-sm text-[#444]">Loading...</p>
@@ -428,32 +595,26 @@ export default function App() {
               )}
             </div>
 
-            {/* Info */}
             <div className="mt-4 bg-[#161616] border border-[#222] rounded-lg p-4">
-              <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-2">
-                How it works
-              </h3>
+              <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-2">How it works</h3>
               <div className="grid grid-cols-3 gap-4 text-xs text-[#666]">
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">1. Upload</div>
-                  Extract a frame at N seconds:<br />
-                  <code className="text-[10px] text-[#555]">bash scripts/extract_frame.sh video.mp4 5</code>
+                  <code className="text-[10px] text-[#555]">bash scripts/extract_frame.sh video.mp4 4</code>
                 </div>
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">2. Adjust</div>
-                  Move sliders or pick a preset. Preview updates instantly in your browser.
+                  Restore (Topaz) + Style (AE) — instant preview
                 </div>
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">3. Export</div>
-                  Download the JSON config, then run the full pipeline on Modal with those settings.
+                  Download JSON, run full pipeline on Modal
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
-
-      {/* Hidden canvas for processing */}
       <canvas ref={canvasRef} className="hidden" />
     </div>
   );
