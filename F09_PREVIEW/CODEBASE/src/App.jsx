@@ -41,37 +41,54 @@ const DEFAULTS = PRESETS.beauty;
 
 /* ── Canvas Processing ─────────────────────────────────── */
 
-// Box blur helper
+// Fast box blur — sliding window O(w*h) regardless of radius
 function boxBlur(srcData, w, h, radius) {
   const dst = new Uint8ClampedArray(srcData.length);
   const r = Math.max(1, Math.round(radius));
-  // Horizontal pass
   const tmp = new Uint8ClampedArray(srcData.length);
+  const diam = r * 2 + 1;
+
+  // Horizontal pass (sliding window)
   for (let y = 0; y < h; y++) {
+    let rS = 0, gS = 0, bS = 0;
+    const row = y * w;
+    // Init first window
+    for (let dx = -r; dx <= r; dx++) {
+      const px = Math.min(w - 1, Math.max(0, dx));
+      const i = (row + px) * 4;
+      rS += srcData[i]; gS += srcData[i+1]; bS += srcData[i+2];
+    }
     for (let x = 0; x < w; x++) {
-      let rSum = 0, gSum = 0, bSum = 0, count = 0;
-      for (let dx = -r; dx <= r; dx++) {
-        const px = Math.min(w - 1, Math.max(0, x + dx));
-        const i = (y * w + px) * 4;
-        rSum += srcData[i]; gSum += srcData[i+1]; bSum += srcData[i+2];
-        count++;
-      }
-      const i = (y * w + x) * 4;
-      tmp[i] = rSum/count; tmp[i+1] = gSum/count; tmp[i+2] = bSum/count; tmp[i+3] = srcData[i+3];
+      const i = (row + x) * 4;
+      tmp[i] = rS / diam; tmp[i+1] = gS / diam; tmp[i+2] = bS / diam; tmp[i+3] = srcData[i+3];
+      // Slide: add right, remove left
+      const addX = Math.min(w - 1, x + r + 1);
+      const remX = Math.max(0, x - r);
+      const ai = (row + addX) * 4;
+      const ri = (row + remX) * 4;
+      rS += srcData[ai] - srcData[ri];
+      gS += srcData[ai+1] - srcData[ri+1];
+      bS += srcData[ai+2] - srcData[ri+2];
     }
   }
-  // Vertical pass
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      let rSum = 0, gSum = 0, bSum = 0, count = 0;
-      for (let dy = -r; dy <= r; dy++) {
-        const py = Math.min(h - 1, Math.max(0, y + dy));
-        const i = (py * w + x) * 4;
-        rSum += tmp[i]; gSum += tmp[i+1]; bSum += tmp[i+2];
-        count++;
-      }
+  // Vertical pass (sliding window)
+  for (let x = 0; x < w; x++) {
+    let rS = 0, gS = 0, bS = 0;
+    for (let dy = -r; dy <= r; dy++) {
+      const py = Math.min(h - 1, Math.max(0, dy));
+      const i = (py * w + x) * 4;
+      rS += tmp[i]; gS += tmp[i+1]; bS += tmp[i+2];
+    }
+    for (let y = 0; y < h; y++) {
       const i = (y * w + x) * 4;
-      dst[i] = rSum/count; dst[i+1] = gSum/count; dst[i+2] = bSum/count; dst[i+3] = tmp[i+3];
+      dst[i] = rS / diam; dst[i+1] = gS / diam; dst[i+2] = bS / diam; dst[i+3] = tmp[i+3];
+      const addY = Math.min(h - 1, y + r + 1);
+      const remY = Math.max(0, y - r);
+      const ai = (addY * w + x) * 4;
+      const ri = (remY * w + x) * 4;
+      rS += tmp[ai] - tmp[ri];
+      gS += tmp[ai+1] - tmp[ri+1];
+      bS += tmp[ai+2] - tmp[ri+2];
     }
   }
   return dst;
