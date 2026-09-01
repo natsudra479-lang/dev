@@ -112,8 +112,17 @@ function computeEdgeMap(luma, w, h) {
 }
 
 function processImage(canvas, ctx, img, p) {
-  const w = img.naturalWidth || img.width;
-  const h = img.naturalHeight || img.height;
+  let w = img.naturalWidth || img.width;
+  let h = img.naturalHeight || img.height;
+
+  // Cap at 1024px on longest side for performance
+  const MAX = 1024;
+  if (w > MAX || h > MAX) {
+    const scale = MAX / Math.max(w, h);
+    w = Math.round(w * scale);
+    h = Math.round(h * scale);
+  }
+
   canvas.width = w;
   canvas.height = h;
   ctx.drawImage(img, 0, 0, w, h);
