@@ -454,9 +454,22 @@ export default function App() {
   const [previewUrl, setPreviewUrl] = useState(null);
   const [loading, setLoading] = useState(false);
   const [frameFile, setFrameFile] = useState(null);
+  const [frameName, setFrameName] = useState('frame_4s.png');
   const originalUrlRef = useRef(null);
   const canvasRef = useRef(null);
   const imgRef = useRef(null);
+
+  // Auto-load default frame on mount
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      imgRef.current = img;
+      originalUrlRef.current = img.src;
+      runProcessing(img, params);
+    };
+    img.src = (import.meta.env.BASE_URL || '/') + 'frame_4s.png';
+  }, []);
 
   const runProcessing = useCallback((img, p) => {
     if (!img) return;
@@ -475,6 +488,7 @@ export default function App() {
     if (!frameFile) return;
     const url = URL.createObjectURL(frameFile);
     originalUrlRef.current = url;
+    setFrameName(frameFile.name);
     const img = new Image();
     img.onload = () => {
       imgRef.current = img;
@@ -508,7 +522,7 @@ export default function App() {
     }
   };
 
-  const originalUrl = frameFile ? originalUrlRef.current || URL.createObjectURL(frameFile) : null;
+  const originalUrl = originalUrlRef.current;
 
   return (
     <div className="min-h-screen bg-[#0a0a0a]">
@@ -539,11 +553,8 @@ export default function App() {
               </h3>
               <label className="block w-full py-5 border-2 border-dashed border-[#333] hover:border-[#c9a84c] rounded-lg text-center cursor-pointer transition-colors">
                 <input type="file" accept="image/*" onChange={handleFrameUpload} className="hidden" />
-                {frameFile ? (
-                  <span className="text-sm text-[#c9a84c]">{frameFile.name}</span>
-                ) : (
-                  <span className="text-sm text-[#666]">Click to upload frame</span>
-                )}
+                <span className="text-sm text-[#c9a84c]">{frameName}</span>
+                <span className="text-[10px] text-[#555] block mt-1">Drop or click to change</span>
               </label>
             </div>
 
@@ -583,15 +594,7 @@ export default function App() {
               <h3 className="text-xs font-semibold tracking-wider uppercase text-[#888] mb-4">
                 Preview Comparison
               </h3>
-              {!frameFile ? (
-                <div className="aspect-video bg-[#0a0a0a] rounded-lg flex items-center justify-center border border-dashed border-[#222]">
-                  <div className="text-center">
-                    <div className="text-4xl mb-3 opacity-30">{'\u2726'}</div>
-                    <p className="text-sm text-[#444]">Upload a frame to start previewing</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-4">
                   <div>
                     <div className="text-xs text-[#666] mb-2 text-center uppercase tracking-wider">Original</div>
                     <img src={originalUrl} alt="Original" className="w-full rounded-lg border border-[#222]" />
@@ -609,7 +612,6 @@ export default function App() {
                     )}
                   </div>
                 </div>
-              )}
             </div>
 
             <div className="mt-4 bg-[#161616] border border-[#222] rounded-lg p-4">
