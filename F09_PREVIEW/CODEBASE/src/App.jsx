@@ -238,7 +238,11 @@ function processImage(canvas, ctx, img, p) {
 
     // Edge map
     const edges = computeEdgeMap(luma, w, h);
-    const edgeMax = Math.max(...edges) || 1;
+    let edgeMax = 0;
+    for (let ei = 0; ei < edges.length; ei++) {
+      if (edges[ei] > edgeMax) edgeMax = edges[ei];
+    }
+    edgeMax = edgeMax || 1;
 
     // Multi-scale blur kernels based on sharpenWidth
     const baseR = Math.max(1, Math.round(p.sharpenWidth));
