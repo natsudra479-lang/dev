@@ -247,7 +247,9 @@ function processImage(canvas, ctx, img, p) {
 
     // Edge map
     const edges = computeEdgeMap(luma, w, h);
-    const edgeMax = Math.max(...edges) || 1;
+    let edgeMax = 0;
+    for (let k = 0; k < edges.length; k++) { if (edges[k] > edgeMax) edgeMax = edges[k]; }
+    edgeMax = edgeMax || 1;
 
     // Multi-scale blur kernels based on sharpenWidth
     const baseR = Math.max(1, Math.round(p.sharpenWidth));
@@ -470,14 +472,20 @@ export default function App() {
   const runProcessing = useCallback((img, p) => {
     if (!img) return;
     setLoading(true);
-    requestAnimationFrame(() => {
+    setTimeout(() => {
       const canvas = canvasRef.current || document.createElement('canvas');
       if (!canvasRef.current) canvasRef.current = canvas;
       const ctx = canvas.getContext('2d', { willReadFrequently: true });
-      const result = processImage(canvas, ctx, img, p);
-      setPreviewUrl(result);
-      setLoading(false);
-    });
+      try {
+        const result = processImage(canvas, ctx, img, p);
+        setPreviewUrl(result);
+      } catch (e) {
+        console.error('Processing error:', e);
+        setPreviewUrl(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 20);
   }, []);
 
   useEffect(() => {
