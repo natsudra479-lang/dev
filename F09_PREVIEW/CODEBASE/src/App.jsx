@@ -267,34 +267,89 @@ function processImage(canvas, ctx, img, p) {
   }
 
   // ═══════════════════════════════════════════════════════
-  // GLOW (screen blend, highlight extraction)
+  // CINEMATIC GLOW — multi-scale gaussian bloom
   // ═══════════════════════════════════════════════════════
   if (p.glowIntensity > 0) {
-    const glowCanvas = document.createElement('canvas');
-    glowCanvas.width = w;
-    glowCanvas.height = h;
-    const glowCtx = glowCanvas.getContext('2d');
-    glowCtx.drawImage(canvas, 0, 0);
+    const baseW = Math.round(p.glowWidth);
 
-    // Extract highlights
-    const gd = glowCtx.getImageData(0, 0, w, h);
-    const gdata = gd.data;
-    for (let i = 0; i < gdata.length; i += 4) {
-      const lum = 0.2126 * gdata[i] + 0.7152 * gdata[i+1] + 0.0722 * gdata[i+2];
-      if (lum < 160) {
-        gdata[i] = gdata[i+1] = gdata[i+2] = 0;
-        gdata[i+3] = 0;
-      } else {
-        gdata[i+3] = Math.min(255, (lum - 160) * 2.5);
-      }
+    // --- Layer 1: TIGHT BLOOM (small radius, highlights only) ---
+    const c1 = document.createElement('canvas');
+    c1.width = w; c1.height = h;
+    const ctx1 = c1.getContext('2d');
+    ctx1.drawImage(canvas, 0, 0);
+    const d1 = ctx1.getImageData(0, 0, w, h).data;
+    const softKnee = 120;
+    for (let i = 0; i < d1.length; i += 4) {
+      const lum = 0.2126 * d1[i] + 0.7152 * d1[i+1] + 0.0722 * d1[i+2];
+      // Soft threshold with smooth rolloff
+      const t = Math.max(0, Math.min(1, (lum - softKnee) / (255 - softKnee)));
+      const mask = t * t * (3 - 2 * t); // smoothstep
+      d1[i] *= mask; d1[i+1] *= mask; d1[i+2] *= mask;
     }
-    glowCtx.putImageData(gd, 0, 0);
+    ctx1.putImageData(new ImageData(d1, w, h), 0, 0);
+    // Multi-pass box blur to approximate gaussian (3 passes = ~gaussian)
+    let tmp1 = new Uint8ClampedArray(d1);
+    for (let pass = 0; pass < 3; pass++) {
+      tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.3)));
+    }
+    const gd1 = ctx1.getImageData(0, 0, w, h);
+    gd1.data.set(tmp1);
+    ctx1.putImageData(gd1, 0, 0);
 
-    // Blur highlights
-    ctx.filter = `blur(${Math.round(p.glowWidth)}px)`;
-    ctx.globalAlpha = p.glowIntensity * 0.5;
+    // --- Layer 2: HALO (medium radius, broad bloom) ---
+    const c2 = document.createElement('canvas');
+    c2.width = w; c2.height = h;
+    const ctx2 = c2.getContext('2d');
+    ctx2.drawImage(canvas, 0, 0);
+    const d2 = ctx2.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < d2.length; i += 4) {
+      const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
+      const t = Math.max(0, Math.min(1, (lum - 140) / (255 - 140)));
+      const mask = t * t;
+      d2[i] *= mask; d2[i+1] *= mask; d2[i+2] *= mask;
+    }
+    ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
+    let tmp2 = new Uint8ClampedArray(d2);
+    for (let pass = 0; pass < 3; pass++) {
+      tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.7)));
+    }
+    const gd2 = ctx2.getImageData(0, 0, w, h);
+    gd2.data.set(tmp2);
+    ctx2.putImageData(gd2, 0, 0);
+
+    // --- Layer 3: ATMOSPHERE (large radius, global wrap) ---
+    const c3 = document.createElement('canvas');
+    c3.width = w; c3.height = h;
+    const ctx3 = c3.getContext('2d');
+    ctx3.drawImage(canvas, 0, 0);
+    const d3 = ctx3.getImageData(0, 0, w, h).data;
+    for (let i = 0; i < d3.length; i += 4) {
+      const lum = 0.2126 * d3[i] + 0.7152 * d3[i+1] + 0.0722 * d3[i+2];
+      // Very soft — even mid-tones contribute to atmosphere
+      const t = Math.max(0, Math.min(1, (lum - 80) / (255 - 80)));
+      d3[i] *= t * 0.4; d3[i+1] *= t * 0.4; d3[i+2] *= t * 0.4;
+    }
+    ctx3.putImageData(new ImageData(d3, w, h), 0, 0);
+    let tmp3 = new Uint8ClampedArray(d3);
+    for (let pass = 0; pass < 3; pass++) {
+      tmp3 = boxBlur(tmp3, w, h, Math.max(1, Math.round(baseW * 1.5)));
+    }
+    const gd3 = ctx3.getImageData(0, 0, w, h);
+    gd3.data.set(tmp3);
+    ctx3.putImageData(gd3, 0, 0);
+
+    // --- COMPOSITE: screen blend all 3 layers ---
+    const intensity = p.glowIntensity;
+    // Layer 3: atmosphere (softest, lowest alpha)
+    ctx.globalAlpha = intensity * 0.15;
     ctx.globalCompositeOperation = 'screen';
-    ctx.drawImage(glowCanvas, 0, 0);
+    ctx.drawImage(c3, 0, 0);
+    // Layer 2: halo
+    ctx.globalAlpha = intensity * 0.35;
+    ctx.drawImage(c2, 0, 0);
+    // Layer 1: tight bloom (strongest)
+    ctx.globalAlpha = intensity * 0.6;
+    ctx.drawImage(c1, 0, 0);
     ctx.filter = 'none';
     ctx.globalAlpha = 1.0;
     ctx.globalCompositeOperation = 'source-over';
