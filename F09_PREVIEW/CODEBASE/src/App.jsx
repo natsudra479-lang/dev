@@ -76,16 +76,16 @@ function boxBlur(srcData, w, h, radius) {
     let rS = 0, gS = 0, bS = 0;
     for (let dy = -r; dy <= r; dy++) {
       const py = Math.min(h - 1, Math.max(0, dy));
-      const i = (py * w + x) * 4;
+      const i = (py * w) * 4 + x * 4;
       rS += tmp[i]; gS += tmp[i+1]; bS += tmp[i+2];
     }
     for (let y = 0; y < h; y++) {
-      const i = (y * w + x) * 4;
+      const i = (y * w) * 4 + x * 4;
       dst[i] = rS / diam; dst[i+1] = gS / diam; dst[i+2] = bS / diam; dst[i+3] = tmp[i+3];
       const addY = Math.min(h - 1, y + r + 1);
       const remY = Math.max(0, y - r);
-      const ai = (addY * w + x) * 4;
-      const ri = (remY * w + x) * 4;
+      const ai = (addY * w) * 4 + x * 4;
+      const ri = (remY * w) * 4 + x * 4;
       rS += tmp[ai] - tmp[ri];
       gS += tmp[ai+1] - tmp[ri+1];
       bS += tmp[ai+2] - tmp[ri+2];
