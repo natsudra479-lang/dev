@@ -6,35 +6,35 @@ const SECTIONS = {
     label: 'RESTORE (Topaz)',
     icon: '\uD83D\uDD27',
     sliders: [
-      { key: 'compressionFix', min: 0, max: 100, step: 1, label: 'Compression Fix', unit: '%' },
-      { key: 'detailEnhance',  min: 0, max: 100, step: 1, label: 'Detail Enhance',  unit: '%' },
-      { key: 'detailReveal',   min: 0, max: 100, step: 1, label: 'Detail Reveal',   unit: '%' },
-      { key: 'denoise',        min: 0, max: 100, step: 1, label: 'Denoise',          unit: '%' },
-      { key: 'dehalo',         min: 0, max: 100, step: 1, label: 'Dehalo',           unit: '%' },
+      { key: 'compressionFix', min: 0, max: 600, step: 1, label: 'Compression Fix', unit: '%' },
+      { key: 'detailEnhance',  min: 0, max: 600, step: 1, label: 'Detail Enhance',  unit: '%' },
+      { key: 'detailReveal',   min: 0, max: 600, step: 1, label: 'Detail Reveal',   unit: '%' },
+      { key: 'denoise',        min: 0, max: 600, step: 1, label: 'Denoise',          unit: '%' },
+      { key: 'dehalo',         min: 0, max: 600, step: 1, label: 'Dehalo',           unit: '%' },
     ],
   },
   style: {
     label: 'STYLE (AE)',
     icon: '\uD83C\uDFA8',
     sliders: [
-      { key: 'sharpenIntensity', min: 0.0, max: 3.0, step: 0.05, label: 'Sharpen',       unit: 'x' },
-      { key: 'sharpenWidth',     min: 0.5, max: 5.0, step: 0.1,  label: 'Sharpen Width', unit: 'px' },
-      { key: 'edgeThreshold',    min: 0,   max: 100, step: 1,    label: 'Edge Threshold', unit: '' },
-      { key: 'contrast',         min: 0.5, max: 2.0, step: 0.05, label: 'Contrast',      unit: 'x' },
-      { key: 'saturation',       min: 0.0, max: 2.0, step: 0.05, label: 'Saturation',    unit: 'x' },
-      { key: 'warmth',           min: 0.5, max: 1.5, step: 0.05, label: 'Warmth',        unit: 'x' },
-      { key: 'glowIntensity',    min: 0.0, max: 1.0, step: 0.05, label: 'Glow',          unit: 'x' },
-      { key: 'glowWidth',        min: 5,   max: 80,  step: 1,    label: 'Glow Width',    unit: 'px' },
+      { key: 'sharpenIntensity', min: 0.0, max: 18.0, step: 0.05, label: 'Sharpen',       unit: 'x' },
+      { key: 'sharpenWidth',     min: 0.5, max: 30.0, step: 0.1,  label: 'Sharpen Width', unit: 'px' },
+      { key: 'edgeThreshold',    min: 0,   max: 600, step: 1,    label: 'Edge Threshold', unit: '' },
+      { key: 'contrast',         min: 0.5, max: 12.0, step: 0.05, label: 'Contrast',      unit: 'x' },
+      { key: 'saturation',       min: 0.0, max: 12.0, step: 0.05, label: 'Saturation',    unit: 'x' },
+      { key: 'warmth',           min: 0.5, max: 9.0, step: 0.05, label: 'Warmth',        unit: 'x' },
+      { key: 'glowIntensity',    min: 0.0, max: 6.0, step: 0.05, label: 'Glow',          unit: 'x' },
+      { key: 'glowWidth',        min: 5,   max: 480,  step: 1,    label: 'Glow Width',    unit: 'px' },
     ],
   },
 };
 
 const PRESETS = {
-  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, label: 'Beauty',  icon: '\u2726' },
-  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, label: 'Demon',   icon: '\uD83D\uDD25' },
-  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, label: 'Cinema',  icon: '\uD83C\uDFAC' },
-  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, label: 'Crunchy', icon: '\uD83D\uDC8E' },
-  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, label: 'Clean',   icon: '\u25FB' },
+  beauty:  { compressionFix: 180, detailEnhance: 240, detailReveal: 180, denoise: 120, dehalo: 60, sharpenIntensity: 9.0, sharpenWidth: 9.0, edgeThreshold: 120, contrast: 6.6, saturation: 6.48, warmth: 6.0, glowIntensity: 2.1, glowWidth: 180, label: 'Beauty',  icon: '\u2726' },
+  demon:   { compressionFix: 300, detailEnhance: 420, detailReveal: 360, denoise: 180, dehalo: 120, sharpenIntensity: 10.8, sharpenWidth: 12.0, edgeThreshold: 90, contrast: 7.8, saturation: 8.4, warmth: 6.6, glowIntensity: 3.6, glowWidth: 300, label: 'Demon',   icon: '\uD83D\uDD25' },
+  cinema:  { compressionFix: 120, detailEnhance: 180, detailReveal: 150, denoise: 90, dehalo: 30, sharpenIntensity: 4.8, sharpenWidth: 6.0, edgeThreshold: 180, contrast: 6.3, saturation: 6.3, warmth: 5.88, glowIntensity: 1.8, glowWidth: 150, label: 'Cinema',  icon: '\uD83C\uDFAC' },
+  crunchy: { compressionFix: 240, detailEnhance: 360, detailReveal: 300, denoise: 150, dehalo: 90, sharpenIntensity: 9.0, sharpenWidth: 10.8, edgeThreshold: 108, contrast: 6.9, saturation: 6.6, warmth: 6.12, glowIntensity: 2.4, glowWidth: 210, label: 'Crunchy', icon: '\uD83D\uDC8E' },
+  clean:   { compressionFix: 360, detailEnhance: 120, detailReveal: 90, denoise: 240, dehalo: 30, sharpenIntensity: 3.0, sharpenWidth: 4.8, edgeThreshold: 240, contrast: 6.18, saturation: 6.0, warmth: 6.0, glowIntensity: 0.9, glowWidth: 90, label: 'Clean',   icon: '\u25FB' },
 };
 
 const DEFAULTS = PRESETS.beauty;
