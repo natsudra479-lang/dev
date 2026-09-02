@@ -233,57 +233,36 @@ function processImage(canvas, ctx, img, p) {
   ctx.putImageData(imageData, 0, 0);
 
   // ═══════════════════════════════════════════════════════
-  // MULTI-SCALE SHARPEN (Luma-only, Edge-aware)
+  // SHARPEN — Unsharp Mask (edge-aware)
   // ═══════════════════════════════════════════════════════
   if (p.sharpenIntensity > 0) {
     const currentData = ctx.getImageData(0, 0, w, h);
     const cd = currentData.data;
+    const radius = Math.max(1, Math.round(p.sharpenWidth));
+    const blurred = boxBlur(cd, w, h, radius);
+    const amount = (p.sharpenIntensity - 1.0) * 0.5;
+    const threshold = p.edgeThreshold;
 
-    // Compute luma
+    // Compute luma for edge-aware sharpening
     const luma = new Float32Array(w * h);
     for (let i = 0; i < cd.length; i += 4) {
-      luma[i/4] = 0.2126 * cd[i] + 0.7152 * cd[i+1] + 0.0722 * cd[i+2];
+      luma[i >> 2] = 0.2126 * cd[i] + 0.7152 * cd[i+1] + 0.0722 * cd[i+2];
     }
-
-    // Edge map
     const edges = computeEdgeMap(luma, w, h);
     let edgeMax = 0;
     for (let k = 0; k < edges.length; k++) { if (edges[k] > edgeMax) edgeMax = edges[k]; }
     edgeMax = edgeMax || 1;
 
-    // Multi-scale blur kernels based on sharpenWidth
-    const baseR = Math.max(1, Math.round(p.sharpenWidth));
-    const blur1 = boxBlur(cd, w, h, Math.max(1, baseR));
-    const blur2 = boxBlur(cd, w, h, Math.max(1, baseR * 2));
-    const blur3 = boxBlur(cd, w, h, Math.max(1, baseR * 4));
-
-    const threshold = p.edgeThreshold / 100; // 0 = sharpen all, 1 = sharpen nothing
-    const amount = p.sharpenIntensity * 0.35;
-
     for (let i = 0; i < cd.length; i += 4) {
-      const px = (i / 4) % w;
-      const py = Math.floor((i / 4) / w);
-      const edgeVal = edges[py * w + px] / edgeMax;
-      const edgeMask = threshold > 0
-        ? Math.max(0, Math.min(1, (edgeVal - threshold * 0.3) / (threshold * 0.7 + 0.001)))
-        : 1.0;
-
-      // Multi-scale: fine + medium + coarse detail
-      const detail1 = cd[i]   - blur1[i];
-      const detail2 = blur1[i] - blur2[i];
-      const detail3 = blur2[i] - blur3[i];
-      const sharpened = detail1 * 1.0 + detail2 * 0.5 + detail3 * 0.2;
-
-      // Luma-only: apply to all channels proportionally
-      const lumaVal = luma[i/4] || 1;
-      const factor = (lumaVal > 0) ? sharpened / lumaVal : 0;
-      const apply = amount * edgeMask * factor;
-
-      cd[i]   = Math.min(255, Math.max(0, cd[i]   + sharpened * amount * edgeMask));
-      cd[i+1] = Math.min(255, Math.max(0, cd[i+1] + sharpened * amount * edgeMask));
-      cd[i+2] = Math.min(255, Math.max(0, cd[i+2] + sharpened * amount * edgeMask));
+      const px = (i >> 2) % w;
+      const py = (i >> 2) / w | 0;
+      const edgeVal = (edges[py * w + px] / edgeMax) * 255;
+      const edgeMask = threshold > 0 ? Math.max(0, Math.min(1, (edgeVal - threshold) / 40)) : 1.0;
+      const diff = cd[i] - blurred[i];
+      cd[i]   = Math.min(255, Math.max(0, cd[i]   + diff * amount * edgeMask));
+      cd[i+1] = Math.min(255, Math.max(0, cd[i+1] + (cd[i+1] - blurred[i+1]) * amount * edgeMask));
+      cd[i+2] = Math.min(255, Math.max(0, cd[i+2] + (cd[i+2] - blurred[i+2]) * amount * edgeMask));
     }
-
     ctx.putImageData(currentData, 0, 0);
   }
 
