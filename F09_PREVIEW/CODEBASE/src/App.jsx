@@ -46,6 +46,7 @@ const PRESETS = {
   aurora:  { compressionFix: 25, detailEnhance: 35, detailReveal: 30, denoise: 15, dehalo: 8,  sharpenIntensity: 1.2, sharpenWidth: 1.3, edgeThreshold: 25, contrast: 1.08, saturation: 1.15, warmth: 0.95, glowIntensity: 0.8, glowWidth: 60, glowMode: 'aurora', label: 'Aurora',  icon: '\u{1F30C}' },
   neonarc: { compressionFix: 35, detailEnhance: 55, detailReveal: 45, denoise: 10, dehalo: 12, sharpenIntensity: 2.0, sharpenWidth: 2.2, edgeThreshold: 10, contrast: 1.25, saturation: 1.3, warmth: 1.05, glowIntensity: 1.0, glowWidth: 40, glowMode: 'neon', label: 'Neon Arc', icon: '\u26A1' },
   blockbuster: { compressionFix: 25, detailEnhance: 40, detailReveal: 30, denoise: 15, dehalo: 5, sharpenIntensity: 1.1, sharpenWidth: 1.2, edgeThreshold: 25, contrast: 1.15, saturation: 1.15, warmth: 1.08, glowIntensity: 0.5, glowWidth: 45, glowMode: 'classic', label: 'Blockbuster', icon: '\uD83C\uDFA5' },
+  ultraSharp: { compressionFix: 15, detailEnhance: 50, detailReveal: 45, denoise: 5, dehalo: 8, sharpenIntensity: 2.0, sharpenWidth: 1.8, edgeThreshold: 12, contrast: 1.15, saturation: 1.08, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', label: 'Ultra Sharp', icon: '\uD83D\uDD2D' },
 };
 
 const DEFAULTS = PRESETS.beauty;
