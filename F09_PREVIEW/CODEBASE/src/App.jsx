@@ -1,6 +1,14 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 
 /* ── Config ───────────────────────────────────────────── */
+const GLOW_MODES = [
+  { key: 'classic',  label: 'Classic',  icon: '\u2726', desc: 'Cinematic multi-scale bloom' },
+  { key: 'aurora',   label: 'Aurora',   icon: '\u{1F30C}', desc: 'Aurora Borealis — green/cyan/violet' },
+  { key: 'neon',     label: 'Neon',     icon: '\u26A1', desc: 'Neon Pulse — sharp colored halos' },
+  { key: 'cosmic',   label: 'Cosmic',   icon: '\u2B50', desc: 'Cosmic Rays — radial light streaks' },
+  { key: 'digital',  label: 'Digital',  icon: '\u{1F4BB}', desc: 'Digital Rain — Matrix-style green' },
+];
+
 const SECTIONS = {
   restore: {
     label: 'RESTORE (Topaz)',
@@ -30,11 +38,13 @@ const SECTIONS = {
 };
 
 const PRESETS = {
-  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, label: 'Beauty',  icon: '\u2726' },
-  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, label: 'Demon',   icon: '\uD83D\uDD25' },
-  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, label: 'Cinema',  icon: '\uD83C\uDFAC' },
-  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, label: 'Crunchy', icon: '\uD83D\uDC8E' },
-  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, label: 'Clean',   icon: '\u25FB' },
+  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, glowMode: 'classic', label: 'Beauty',  icon: '\u2726' },
+  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, glowMode: 'cosmic', label: 'Demon',   icon: '\uD83D\uDD25' },
+  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, glowMode: 'classic', label: 'Cinema',  icon: '\uD83C\uDFAC' },
+  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, glowMode: 'neon', label: 'Crunchy', icon: '\uD83D\uDC8E' },
+  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, glowMode: 'classic', label: 'Clean',   icon: '\u25FB' },
+  aurora:  { compressionFix: 25, detailEnhance: 35, detailReveal: 30, denoise: 15, dehalo: 8,  sharpenIntensity: 1.2, sharpenWidth: 1.3, edgeThreshold: 25, contrast: 1.08, saturation: 1.15, warmth: 0.95, glowIntensity: 0.8, glowWidth: 60, glowMode: 'aurora', label: 'Aurora',  icon: '\u{1F30C}' },
+  neonarc: { compressionFix: 35, detailEnhance: 55, detailReveal: 45, denoise: 10, dehalo: 12, sharpenIntensity: 2.0, sharpenWidth: 2.2, edgeThreshold: 10, contrast: 1.25, saturation: 1.3, warmth: 1.05, glowIntensity: 1.0, glowWidth: 40, glowMode: 'neon', label: 'Neon Arc', icon: '\u26A1' },
 };
 
 const DEFAULTS = PRESETS.beauty;
@@ -48,11 +58,10 @@ function boxBlur(srcData, w, h, radius) {
   const tmp = new Uint8ClampedArray(srcData.length);
   const diam = r * 2 + 1;
 
-  // Horizontal pass (sliding window)
+  // Horizontal pass
   for (let y = 0; y < h; y++) {
     let rS = 0, gS = 0, bS = 0;
     const row = y * w;
-    // Init first window
     for (let dx = -r; dx <= r; dx++) {
       const px = Math.min(w - 1, Math.max(0, dx));
       const i = (row + px) * 4;
@@ -61,17 +70,14 @@ function boxBlur(srcData, w, h, radius) {
     for (let x = 0; x < w; x++) {
       const i = (row + x) * 4;
       tmp[i] = rS / diam; tmp[i+1] = gS / diam; tmp[i+2] = bS / diam; tmp[i+3] = srcData[i+3];
-      // Slide: add right, remove left
       const addX = Math.min(w - 1, x + r + 1);
       const remX = Math.max(0, x - r);
       const ai = (row + addX) * 4;
       const ri = (row + remX) * 4;
-      rS += srcData[ai] - srcData[ri];
-      gS += srcData[ai+1] - srcData[ri+1];
-      bS += srcData[ai+2] - srcData[ri+2];
+      rS += srcData[ai] - srcData[ri]; gS += srcData[ai+1] - srcData[ri+1]; bS += srcData[ai+2] - srcData[ri+2];
     }
   }
-  // Vertical pass (sliding window)
+  // Vertical pass
   for (let x = 0; x < w; x++) {
     let rS = 0, gS = 0, bS = 0;
     for (let dy = -r; dy <= r; dy++) {
@@ -86,15 +92,13 @@ function boxBlur(srcData, w, h, radius) {
       const remY = Math.max(0, y - r);
       const ai = (addY * w) * 4 + x * 4;
       const ri = (remY * w) * 4 + x * 4;
-      rS += tmp[ai] - tmp[ri];
-      gS += tmp[ai+1] - tmp[ri+1];
-      bS += tmp[ai+2] - tmp[ri+2];
+      rS += tmp[ai] - tmp[ri]; gS += tmp[ai+1] - tmp[ri+1]; bS += tmp[ai+2] - tmp[ri+2];
     }
   }
   return dst;
 }
 
-// Sobel edge magnitude (0-255)
+// Sobel edge magnitude
 function computeEdgeMap(luma, w, h) {
   const edges = new Float32Array(w * h);
   for (let y = 1; y < h-1; y++) {
@@ -111,11 +115,351 @@ function computeEdgeMap(luma, w, h) {
   return edges;
 }
 
+// Smoothstep helper
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOW MODE: CLASSIC — cinematic multi-scale bloom
+// ═══════════════════════════════════════════════════════
+function glowClassic(canvas, ctx, w, h, intensity, baseW) {
+  // Layer 1: TIGHT BLOOM
+  const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+  const ctx1 = c1.getContext('2d'); ctx1.drawImage(canvas, 0, 0);
+  const d1 = ctx1.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d1.length; i += 4) {
+    const lum = 0.2126 * d1[i] + 0.7152 * d1[i+1] + 0.0722 * d1[i+2];
+    const mask = smoothstep(120, 255, lum);
+    d1[i] *= mask; d1[i+1] *= mask; d1[i+2] *= mask;
+  }
+  ctx1.putImageData(new ImageData(d1, w, h), 0, 0);
+  let tmp1 = new Uint8ClampedArray(d1);
+  for (let pass = 0; pass < 3; pass++) tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.3)));
+  const gd1 = ctx1.getImageData(0, 0, w, h); gd1.data.set(tmp1); ctx1.putImageData(gd1, 0, 0);
+
+  // Layer 2: HALO
+  const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(canvas, 0, 0);
+  const d2 = ctx2.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d2.length; i += 4) {
+    const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
+    const mask = smoothstep(140, 255, lum) ** 2;
+    d2[i] *= mask; d2[i+1] *= mask; d2[i+2] *= mask;
+  }
+  ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
+  let tmp2 = new Uint8ClampedArray(d2);
+  for (let pass = 0; pass < 3; pass++) tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.7)));
+  const gd2 = ctx2.getImageData(0, 0, w, h); gd2.data.set(tmp2); ctx2.putImageData(gd2, 0, 0);
+
+  // Layer 3: ATMOSPHERE
+  const c3 = document.createElement('canvas'); c3.width = w; c3.height = h;
+  const ctx3 = c3.getContext('2d'); ctx3.drawImage(canvas, 0, 0);
+  const d3 = ctx3.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d3.length; i += 4) {
+    const lum = 0.2126 * d3[i] + 0.7152 * d3[i+1] + 0.0722 * d3[i+2];
+    const t = smoothstep(80, 255, lum);
+    d3[i] *= t * 0.4; d3[i+1] *= t * 0.4; d3[i+2] *= t * 0.4;
+  }
+  ctx3.putImageData(new ImageData(d3, w, h), 0, 0);
+  let tmp3 = new Uint8ClampedArray(d3);
+  for (let pass = 0; pass < 3; pass++) tmp3 = boxBlur(tmp3, w, h, Math.max(1, Math.round(baseW * 1.5)));
+  const gd3 = ctx3.getImageData(0, 0, w, h); gd3.data.set(tmp3); ctx3.putImageData(gd3, 0, 0);
+
+  // Composite
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = intensity * 0.15; ctx.drawImage(c3, 0, 0);
+  ctx.globalAlpha = intensity * 0.35; ctx.drawImage(c2, 0, 0);
+  ctx.globalAlpha = intensity * 0.6;  ctx.drawImage(c1, 0, 0);
+  ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOW MODE: AURORA BOREALIS — green/cyan/violet gradients
+// ═══════════════════════════════════════════════════════
+function glowAurora(canvas, ctx, w, h, intensity, baseW) {
+  // Layer 1: Green channel glow (low luminance → green tint)
+  const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+  const ctx1 = c1.getContext('2d'); ctx1.drawImage(canvas, 0, 0);
+  const d1 = ctx1.getImageData(0, 0, w, h).data;
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const lum = 0.2126 * d1[i] + 0.7152 * d1[i+1] + 0.0722 * d1[i+2];
+      const normY = y / h;
+      // Aurora color: green at bottom, cyan in middle, violet at top
+      const greenMix = smoothstep(60, 180, lum) * (1 - normY * 0.5);
+      const cyanMix = smoothstep(100, 200, lum) * Math.abs(normY - 0.5) * 2;
+      const violetMix = smoothstep(140, 255, lum) * normY * 0.8;
+      d1[i]   = d1[i]   * (1 - greenMix * 0.6) + 40  * greenMix * 0.6;
+      d1[i+1] = d1[i+1] * (1 - greenMix * 0.6) + 220 * greenMix * 0.6;
+      d1[i+2] = d1[i+2] * (1 - greenMix * 0.6) + 80  * greenMix * 0.6;
+      // Cyan overlay
+      d1[i]   = d1[i]   * (1 - cyanMix * 0.4);
+      d1[i+1] = d1[i+1] * (1 - cyanMix * 0.4) + 200 * cyanMix * 0.4;
+      d1[i+2] = d1[i+2] * (1 - cyanMix * 0.4) + 220 * cyanMix * 0.4;
+      // Violet overlay
+      d1[i]   = d1[i]   * (1 - violetMix * 0.35) + 160 * violetMix * 0.35;
+      d1[i+1] = d1[i+1] * (1 - violetMix * 0.35);
+      d1[i+2] = d1[i+2] * (1 - violetMix * 0.35) + 200 * violetMix * 0.35;
+    }
+  }
+  ctx1.putImageData(new ImageData(d1, w, h), 0, 0);
+  // Wide soft blur for aurora flow
+  let tmp1 = new Uint8ClampedArray(d1);
+  for (let pass = 0; pass < 4; pass++) tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.5)));
+  const gd1 = ctx1.getImageData(0, 0, w, h); gd1.data.set(tmp1); ctx1.putImageData(gd1, 0, 0);
+
+  // Layer 2: Bright highlight streaks
+  const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(canvas, 0, 0);
+  const d2 = ctx2.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d2.length; i += 4) {
+    const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
+    const mask = smoothstep(160, 255, lum);
+    d2[i] = 80 * mask; d2[i+1] = 255 * mask; d2[i+2] = 160 * mask;
+  }
+  ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
+  let tmp2 = new Uint8ClampedArray(d2);
+  for (let pass = 0; pass < 3; pass++) tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.8)));
+  const gd2 = ctx2.getImageData(0, 0, w, h); gd2.data.set(tmp2); ctx2.putImageData(gd2, 0, 0);
+
+  // Composite
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = intensity * 0.3; ctx.drawImage(c1, 0, 0);
+  ctx.globalAlpha = intensity * 0.5; ctx.drawImage(c2, 0, 0);
+  ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOW MODE: NEON PULSE — sharp colored edge halos
+// ═══════════════════════════════════════════════════════
+function glowNeon(canvas, ctx, w, h, intensity, baseW) {
+  const srcData = ctx.getImageData(0, 0, w, h).data;
+
+  // Compute edge map
+  const luma = new Float32Array(w * h);
+  for (let i = 0; i < srcData.length; i += 4) {
+    luma[i >> 2] = 0.2126 * srcData[i] + 0.7152 * srcData[i+1] + 0.0722 * srcData[i+2];
+  }
+  const edges = computeEdgeMap(luma, w, h);
+  let edgeMax = 0;
+  for (let k = 0; k < edges.length; k++) { if (edges[k] > edgeMax) edgeMax = edges[k]; }
+  edgeMax = edgeMax || 1;
+
+  // Neon edge glow: warm (magenta/orange) on vertical edges, cool (cyan/blue) on horizontal
+  const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+  const ctx1 = c1.getContext('2d');
+  const imgData = ctx1.createImageData(w, h);
+  const nd = imgData.data;
+  for (let y = 1; y < h - 1; y++) {
+    for (let x = 1; x < w - 1; x++) {
+      const idx = y * w + x;
+      const e = edges[idx] / edgeMax;
+      if (e < 0.05) continue;
+      const mask = smoothstep(0.05, 0.5, e);
+      // Direction: gx tells horizontal, gy tells vertical
+      const gy = -luma[(y-1)*w+x] - 2*luma[y*w+x] - luma[(y+1)*w+x]
+                + luma[(y-1)*w+x] + 2*luma[y*w+x] + luma[(y+1)*w+x]; // simplified
+      const gx = -luma[y*w+x-1] + luma[y*w+x+1];
+      const absGx = Math.abs(gx);
+      const absGy = Math.abs(gy);
+      const total = absGx + absGy || 1;
+      const hFactor = absGx / total;
+      const vFactor = absGy / total;
+      const i4 = idx * 4;
+      // Cool (cyan) for horizontal edges, warm (magenta) for vertical
+      nd[i4]   = (80 * hFactor + 255 * vFactor) * mask;
+      nd[i4+1] = (255 * hFactor + 40 * vFactor) * mask;
+      nd[i4+2] = (255 * hFactor + 180 * vFactor) * mask;
+      nd[i4+3] = 255 * mask;
+    }
+  }
+  ctx1.putImageData(imgData, 0, 0);
+  let tmp1 = new Uint8ClampedArray(nd);
+  for (let pass = 0; pass < 3; pass++) tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.25)));
+  const gd1 = ctx1.getImageData(0, 0, w, h); gd1.data.set(tmp1); ctx1.putImageData(gd1, 0, 0);
+
+  // Layer 2: Broad warm bloom for highlights
+  const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(canvas, 0, 0);
+  const d2 = ctx2.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d2.length; i += 4) {
+    const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
+    const mask = smoothstep(180, 255, lum);
+    d2[i] = 255 * mask; d2[i+1] = 100 * mask; d2[i+2] = 200 * mask;
+  }
+  ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
+  let tmp2 = new Uint8ClampedArray(d2);
+  for (let pass = 0; pass < 3; pass++) tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.6)));
+  const gd2 = ctx2.getImageData(0, 0, w, h); gd2.data.set(tmp2); ctx2.putImageData(gd2, 0, 0);
+
+  // Composite
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = intensity * 0.7; ctx.drawImage(c1, 0, 0);
+  ctx.globalAlpha = intensity * 0.25; ctx.drawImage(c2, 0, 0);
+  ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOW MODE: COSMIC RAYS — radial light streaks
+// ═══════════════════════════════════════════════════════
+function glowCosmic(canvas, ctx, w, h, intensity, baseW) {
+  // Layer 1: Colored bloom from highlights
+  const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+  const ctx1 = c1.getContext('2d'); ctx1.drawImage(canvas, 0, 0);
+  const d1 = ctx1.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d1.length; i += 4) {
+    const lum = 0.2126 * d1[i] + 0.7152 * d1[i+1] + 0.0722 * d1[i+2];
+    const mask = smoothstep(130, 255, lum);
+    // Warm shift on highlights
+    d1[i]   = d1[i]   * mask * 1.1;
+    d1[i+1] = d1[i+1] * mask * 0.85;
+    d1[i+2] = d1[i+2] * mask * 1.2;
+  }
+  ctx1.putImageData(new ImageData(d1, w, h), 0, 0);
+  let tmp1 = new Uint8ClampedArray(d1);
+  for (let pass = 0; pass < 3; pass++) tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.5)));
+  const gd1 = ctx1.getImageData(0, 0, w, h); gd1.data.set(tmp1); ctx1.putImageData(gd1, 0, 0);
+
+  // Layer 2: Chromatic aberration — offset R, G, B channels slightly
+  const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(canvas, 0, 0);
+  const d2 = ctx2.getImageData(0, 0, w, h);
+  const src2 = new Uint8ClampedArray(d2.data);
+  const offset = Math.max(1, Math.round(baseW * 0.04));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const lum = 0.2126 * src2[i] + 0.7152 * src2[i+1] + 0.0722 * src2[i+2];
+      if (lum > 140) {
+        const mask = smoothstep(140, 255, lum);
+        // Red shifts left, blue shifts right
+        const rx = Math.min(w - 1, x + offset);
+        const bx = Math.max(0, x - offset);
+        d2.data[i]   = src2[(y * w + rx) * 4] * mask + d2.data[i] * (1 - mask);
+        d2.data[i+2] = src2[(y * w + bx) * 4 + 2] * mask + d2.data[i+2] * (1 - mask);
+      }
+    }
+  }
+  ctx2.putImageData(d2, 0, 0);
+  let tmp2 = new Uint8ClampedArray(ctx2.getImageData(0, 0, w, h).data);
+  for (let pass = 0; pass < 3; pass++) tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.4)));
+  const gd2 = ctx2.getImageData(0, 0, w, h); gd2.data.set(tmp2); ctx2.putImageData(gd2, 0, 0);
+
+  // Layer 3: Radial streak simulation — directional blur from center
+  const c3 = document.createElement('canvas'); c3.width = w; c3.height = h;
+  const ctx3 = c3.getContext('2d'); ctx3.drawImage(canvas, 0, 0);
+  const d3 = ctx3.getImageData(0, 0, w, h);
+  const src3 = new Uint8ClampedArray(d3.data);
+  const cx = w / 2, cy = h / 2;
+  const streakLen = Math.max(2, Math.round(baseW * 0.15));
+  for (let y = 0; y < h; y++) {
+    for (let x = 0; x < w; x++) {
+      const i = (y * w + x) * 4;
+      const lum = 0.2126 * src3[i] + 0.7152 * src3[i+1] + 0.0722 * src3[i+2];
+      if (lum < 160) continue;
+      const mask = smoothstep(160, 255, lum);
+      const dx = (x - cx) / (w * 0.5);
+      const dy = (y - cy) / (h * 0.5);
+      const dist = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const nx = dx / dist, ny = dy / dist;
+      let rSum = 0, gSum = 0, bSum = 0, count = 0;
+      for (let s = 1; s <= streakLen; s++) {
+        const sx = Math.round(x + nx * s); const sy = Math.round(y + ny * s);
+        if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
+          const si = (sy * w + sx) * 4;
+          rSum += src3[si]; gSum += src3[si+1]; bSum += src3[si+2]; count++;
+        }
+      }
+      if (count > 0) {
+        const f = mask * 0.5;
+        d3.data[i]   = Math.min(255, d3.data[i]   + (rSum / count - d3.data[i]) * f);
+        d3.data[i+1] = Math.min(255, d3.data[i+1] + (gSum / count - d3.data[i+1]) * f);
+        d3.data[i+2] = Math.min(255, d3.data[i+2] + (bSum / count - d3.data[i+2]) * f);
+      }
+    }
+  }
+  ctx3.putImageData(d3, 0, 0);
+  let tmp3 = new Uint8ClampedArray(ctx3.getImageData(0, 0, w, h).data);
+  for (let pass = 0; pass < 2; pass++) tmp3 = boxBlur(tmp3, w, h, Math.max(1, Math.round(baseW * 0.3)));
+  const gd3 = ctx3.getImageData(0, 0, w, h); gd3.data.set(tmp3); ctx3.putImageData(gd3, 0, 0);
+
+  // Composite
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = intensity * 0.35; ctx.drawImage(c3, 0, 0);
+  ctx.globalAlpha = intensity * 0.3;  ctx.drawImage(c2, 0, 0);
+  ctx.globalAlpha = intensity * 0.4;  ctx.drawImage(c1, 0, 0);
+  ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ═══════════════════════════════════════════════════════
+// GLOW MODE: DIGITAL RAIN — Matrix-style green vertical streaks
+// ═══════════════════════════════════════════════════════
+function glowDigitalRain(canvas, ctx, w, h, intensity, baseW) {
+  // Layer 1: Green vertical streaks based on luminance
+  const c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+  const ctx1 = c1.getContext('2d');
+  const imgData = ctx1.createImageData(w, h);
+  const nd = imgData.data;
+  const srcData = ctx.getImageData(0, 0, w, h).data;
+  const streakLen = Math.max(3, Math.round(baseW * 0.12));
+  for (let x = 0; x < w; x++) {
+    for (let y = 0; y < h; y++) {
+      const si = (y * w + x) * 4;
+      const lum = 0.2126 * srcData[si] + 0.7152 * srcData[si+1] + 0.0722 * srcData[si+2];
+      if (lum > 100) {
+        const mask = smoothstep(100, 220, lum);
+        // Look up the column for brighter pixels above
+        let maxLum = 0;
+        for (let sy = Math.max(0, y - streakLen); sy < y; sy++) {
+          const ssi = (sy * w + x) * 4;
+          const sl = 0.2126 * srcData[ssi] + 0.7152 * srcData[ssi+1] + 0.0722 * srcData[ssi+2];
+          if (sl > maxLum) maxLum = sl;
+        }
+        const streakMask = smoothstep(80, 200, maxLum) * mask;
+        // Digital green (#00ff41)
+        nd[si]   = 0;
+        nd[si+1] = Math.min(255, 255 * streakMask);
+        nd[si+2] = Math.min(255, 65 * streakMask);
+        nd[si+3] = 255 * streakMask;
+      }
+    }
+  }
+  ctx1.putImageData(imgData, 0, 0);
+  let tmp1 = new Uint8ClampedArray(nd);
+  for (let pass = 0; pass < 2; pass++) tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.15)));
+  const gd1 = ctx1.getImageData(0, 0, w, h); gd1.data.set(tmp1); ctx1.putImageData(gd1, 0, 0);
+
+  // Layer 2: Bright green bloom for highlights
+  const c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+  const ctx2 = c2.getContext('2d'); ctx2.drawImage(canvas, 0, 0);
+  const d2 = ctx2.getImageData(0, 0, w, h).data;
+  for (let i = 0; i < d2.length; i += 4) {
+    const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
+    const mask = smoothstep(150, 255, lum);
+    d2[i] = 20 * mask; d2[i+1] = 255 * mask; d2[i+2] = 65 * mask;
+  }
+  ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
+  let tmp2 = new Uint8ClampedArray(d2);
+  for (let pass = 0; pass < 3; pass++) tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.5)));
+  const gd2 = ctx2.getImageData(0, 0, w, h); gd2.data.set(tmp2); ctx2.putImageData(gd2, 0, 0);
+
+  // Composite
+  ctx.globalCompositeOperation = 'screen';
+  ctx.globalAlpha = intensity * 0.6; ctx.drawImage(c1, 0, 0);
+  ctx.globalAlpha = intensity * 0.35; ctx.drawImage(c2, 0, 0);
+  ctx.globalAlpha = 1.0; ctx.globalCompositeOperation = 'source-over';
+}
+
+// ═══════════════════════════════════════════════════════
+// MAIN PROCESSING
+// ═══════════════════════════════════════════════════════
 function processImage(canvas, ctx, img, p) {
   let w = img.naturalWidth || img.width;
   let h = img.naturalHeight || img.height;
 
-  // Cap at 1024px on longest side for performance
   const MAX = 1024;
   if (w > MAX || h > MAX) {
     const scale = MAX / Math.max(w, h);
@@ -130,35 +474,29 @@ function processImage(canvas, ctx, img, p) {
   let imageData = ctx.getImageData(0, 0, w, h);
   let d = imageData.data;
 
-  // ═══════════════════════════════════════════════════════
-  // TOPAZ RESTORE — simulated via OpenCV-like ops
-  // ═══════════════════════════════════════════════════════
-
-  // Denoise: bilateral-like (smooth flat areas, keep edges)
+  // ═══ TOPAZ RESTORE ═══
   if (p.denoise > 0) {
     const strength = p.denoise / 100;
     const blurred = boxBlur(d, w, h, Math.round(1 + strength * 3));
     for (let i = 0; i < d.length; i += 4) {
       const mix = strength * 0.4;
-      d[i]   = d[i]   * (1-mix) + blurred[i]   * mix;
-      d[i+1] = d[i+1] * (1-mix) + blurred[i+1] * mix;
-      d[i+2] = d[i+2] * (1-mix) + blurred[i+2] * mix;
+      d[i] = d[i]*(1-mix) + blurred[i]*mix;
+      d[i+1] = d[i+1]*(1-mix) + blurred[i+1]*mix;
+      d[i+2] = d[i+2]*(1-mix) + blurred[i+2]*mix;
     }
   }
 
-  // Compression Fix: subtle local contrast boost (removes block artifacts)
   if (p.compressionFix > 0) {
     const strength = p.compressionFix / 100;
     const blurred = boxBlur(d, w, h, 2);
     for (let i = 0; i < d.length; i += 4) {
       const detail = (d[i] - blurred[i]) * (0.5 + strength * 0.5);
-      d[i]   = Math.min(255, Math.max(0, d[i] + detail * 0.3));
+      d[i]   = Math.min(255, Math.max(0, d[i]   + detail * 0.3));
       d[i+1] = Math.min(255, Math.max(0, d[i+1] + detail * 0.3));
       d[i+2] = Math.min(255, Math.max(0, d[i+2] + detail * 0.3));
     }
   }
 
-  // Detail Enhance: unsharp mask with wider kernel
   if (p.detailEnhance > 0) {
     const amount = p.detailEnhance / 100 * 0.8;
     const blurred = boxBlur(d, w, h, 3);
@@ -169,7 +507,6 @@ function processImage(canvas, ctx, img, p) {
     }
   }
 
-  // Detail Reveal: high-pass detail boost
   if (p.detailReveal > 0) {
     const amount = p.detailReveal / 100 * 0.6;
     const blurred = boxBlur(d, w, h, 5);
@@ -181,7 +518,6 @@ function processImage(canvas, ctx, img, p) {
     }
   }
 
-  // Dehalo: reduce ringing around edges
   if (p.dehalo > 0) {
     const strength = p.dehalo / 100;
     const blurred = boxBlur(d, w, h, 2);
@@ -189,18 +525,14 @@ function processImage(canvas, ctx, img, p) {
       const diff = d[i] - blurred[i];
       if (Math.abs(diff) > 40) {
         const reduce = strength * 0.15;
-        d[i]   = Math.min(255, Math.max(0, d[i] - diff * reduce));
+        d[i]   = Math.min(255, Math.max(0, d[i]   - diff * reduce));
         d[i+1] = Math.min(255, Math.max(0, d[i+1] - diff * reduce));
         d[i+2] = Math.min(255, Math.max(0, d[i+2] - diff * reduce));
       }
     }
   }
 
-  // ═══════════════════════════════════════════════════════
-  // AE STYLE
-  // ═══════════════════════════════════════════════════════
-
-  // Contrast
+  // ═══ AE STYLE ═══
   if (p.contrast !== 1.0) {
     const c = p.contrast;
     const intercept = 128 * (1 - c);
@@ -211,7 +543,6 @@ function processImage(canvas, ctx, img, p) {
     }
   }
 
-  // Saturation
   if (p.saturation !== 1.0) {
     for (let i = 0; i < d.length; i += 4) {
       const gray = 0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2];
@@ -221,7 +552,6 @@ function processImage(canvas, ctx, img, p) {
     }
   }
 
-  // Warmth
   if (p.warmth !== 1.0) {
     const shift = (p.warmth - 1.0) * 30;
     for (let i = 0; i < d.length; i += 4) {
@@ -232,9 +562,7 @@ function processImage(canvas, ctx, img, p) {
 
   ctx.putImageData(imageData, 0, 0);
 
-  // ═══════════════════════════════════════════════════════
-  // SHARPEN — Unsharp Mask (edge-aware)
-  // ═══════════════════════════════════════════════════════
+  // ═══ SHARPEN — Unsharp Mask ═══
   if (p.sharpenIntensity > 0) {
     const currentData = ctx.getImageData(0, 0, w, h);
     const cd = currentData.data;
@@ -242,8 +570,6 @@ function processImage(canvas, ctx, img, p) {
     const blurred = boxBlur(cd, w, h, radius);
     const amount = (p.sharpenIntensity - 1.0) * 0.5;
     const threshold = p.edgeThreshold;
-
-    // Compute luma for edge-aware sharpening
     const luma = new Float32Array(w * h);
     for (let i = 0; i < cd.length; i += 4) {
       luma[i >> 2] = 0.2126 * cd[i] + 0.7152 * cd[i+1] + 0.0722 * cd[i+2];
@@ -252,7 +578,6 @@ function processImage(canvas, ctx, img, p) {
     let edgeMax = 0;
     for (let k = 0; k < edges.length; k++) { if (edges[k] > edgeMax) edgeMax = edges[k]; }
     edgeMax = edgeMax || 1;
-
     for (let i = 0; i < cd.length; i += 4) {
       const px = (i >> 2) % w;
       const py = (i >> 2) / w | 0;
@@ -266,93 +591,17 @@ function processImage(canvas, ctx, img, p) {
     ctx.putImageData(currentData, 0, 0);
   }
 
-  // ═══════════════════════════════════════════════════════
-  // CINEMATIC GLOW — multi-scale gaussian bloom
-  // ═══════════════════════════════════════════════════════
+  // ═══ GLOW — mode-based ═══
   if (p.glowIntensity > 0) {
     const baseW = Math.round(p.glowWidth);
-
-    // --- Layer 1: TIGHT BLOOM (small radius, highlights only) ---
-    const c1 = document.createElement('canvas');
-    c1.width = w; c1.height = h;
-    const ctx1 = c1.getContext('2d');
-    ctx1.drawImage(canvas, 0, 0);
-    const d1 = ctx1.getImageData(0, 0, w, h).data;
-    const softKnee = 120;
-    for (let i = 0; i < d1.length; i += 4) {
-      const lum = 0.2126 * d1[i] + 0.7152 * d1[i+1] + 0.0722 * d1[i+2];
-      // Soft threshold with smooth rolloff
-      const t = Math.max(0, Math.min(1, (lum - softKnee) / (255 - softKnee)));
-      const mask = t * t * (3 - 2 * t); // smoothstep
-      d1[i] *= mask; d1[i+1] *= mask; d1[i+2] *= mask;
+    const mode = p.glowMode || 'classic';
+    switch (mode) {
+      case 'aurora':  glowAurora(canvas, ctx, w, h, p.glowIntensity, baseW); break;
+      case 'neon':    glowNeon(canvas, ctx, w, h, p.glowIntensity, baseW); break;
+      case 'cosmic':  glowCosmic(canvas, ctx, w, h, p.glowIntensity, baseW); break;
+      case 'digital': glowDigitalRain(canvas, ctx, w, h, p.glowIntensity, baseW); break;
+      default:        glowClassic(canvas, ctx, w, h, p.glowIntensity, baseW); break;
     }
-    ctx1.putImageData(new ImageData(d1, w, h), 0, 0);
-    // Multi-pass box blur to approximate gaussian (3 passes = ~gaussian)
-    let tmp1 = new Uint8ClampedArray(d1);
-    for (let pass = 0; pass < 3; pass++) {
-      tmp1 = boxBlur(tmp1, w, h, Math.max(1, Math.round(baseW * 0.3)));
-    }
-    const gd1 = ctx1.getImageData(0, 0, w, h);
-    gd1.data.set(tmp1);
-    ctx1.putImageData(gd1, 0, 0);
-
-    // --- Layer 2: HALO (medium radius, broad bloom) ---
-    const c2 = document.createElement('canvas');
-    c2.width = w; c2.height = h;
-    const ctx2 = c2.getContext('2d');
-    ctx2.drawImage(canvas, 0, 0);
-    const d2 = ctx2.getImageData(0, 0, w, h).data;
-    for (let i = 0; i < d2.length; i += 4) {
-      const lum = 0.2126 * d2[i] + 0.7152 * d2[i+1] + 0.0722 * d2[i+2];
-      const t = Math.max(0, Math.min(1, (lum - 140) / (255 - 140)));
-      const mask = t * t;
-      d2[i] *= mask; d2[i+1] *= mask; d2[i+2] *= mask;
-    }
-    ctx2.putImageData(new ImageData(d2, w, h), 0, 0);
-    let tmp2 = new Uint8ClampedArray(d2);
-    for (let pass = 0; pass < 3; pass++) {
-      tmp2 = boxBlur(tmp2, w, h, Math.max(1, Math.round(baseW * 0.7)));
-    }
-    const gd2 = ctx2.getImageData(0, 0, w, h);
-    gd2.data.set(tmp2);
-    ctx2.putImageData(gd2, 0, 0);
-
-    // --- Layer 3: ATMOSPHERE (large radius, global wrap) ---
-    const c3 = document.createElement('canvas');
-    c3.width = w; c3.height = h;
-    const ctx3 = c3.getContext('2d');
-    ctx3.drawImage(canvas, 0, 0);
-    const d3 = ctx3.getImageData(0, 0, w, h).data;
-    for (let i = 0; i < d3.length; i += 4) {
-      const lum = 0.2126 * d3[i] + 0.7152 * d3[i+1] + 0.0722 * d3[i+2];
-      // Very soft — even mid-tones contribute to atmosphere
-      const t = Math.max(0, Math.min(1, (lum - 80) / (255 - 80)));
-      d3[i] *= t * 0.4; d3[i+1] *= t * 0.4; d3[i+2] *= t * 0.4;
-    }
-    ctx3.putImageData(new ImageData(d3, w, h), 0, 0);
-    let tmp3 = new Uint8ClampedArray(d3);
-    for (let pass = 0; pass < 3; pass++) {
-      tmp3 = boxBlur(tmp3, w, h, Math.max(1, Math.round(baseW * 1.5)));
-    }
-    const gd3 = ctx3.getImageData(0, 0, w, h);
-    gd3.data.set(tmp3);
-    ctx3.putImageData(gd3, 0, 0);
-
-    // --- COMPOSITE: screen blend all 3 layers ---
-    const intensity = p.glowIntensity;
-    // Layer 3: atmosphere (softest, lowest alpha)
-    ctx.globalAlpha = intensity * 0.15;
-    ctx.globalCompositeOperation = 'screen';
-    ctx.drawImage(c3, 0, 0);
-    // Layer 2: halo
-    ctx.globalAlpha = intensity * 0.35;
-    ctx.drawImage(c2, 0, 0);
-    // Layer 1: tight bloom (strongest)
-    ctx.globalAlpha = intensity * 0.6;
-    ctx.drawImage(c1, 0, 0);
-    ctx.filter = 'none';
-    ctx.globalAlpha = 1.0;
-    ctx.globalCompositeOperation = 'source-over';
   }
 
   return canvas.toDataURL('image/png');
@@ -385,8 +634,34 @@ function Slider({ config, value, onChange }) {
   );
 }
 
+/* ── Glow Mode Selector ────────────────────────────────── */
+function GlowModeSelector({ active, onChange }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[10px] font-bold tracking-widest uppercase text-[#666]">Glow Mode</h4>
+      <div className="grid grid-cols-5 gap-1.5">
+        {GLOW_MODES.map((mode) => (
+          <button
+            key={mode.key}
+            onClick={() => onChange(mode.key)}
+            className={`flex flex-col items-center py-2 px-1 rounded-lg text-[10px] font-semibold transition-all border ${
+              active === mode.key
+                ? 'bg-[#c9a84c]/15 border-[#c9a84c] text-[#c9a84c]'
+                : 'bg-[#111] border-[#222] text-[#666] hover:border-[#444] hover:text-[#999]'
+            }`}
+            title={mode.desc}
+          >
+            <span className="text-base mb-0.5">{mode.icon}</span>
+            <span className="leading-tight">{mode.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ── Section (collapsible) ────────────────────────────── */
-function Section({ sectionKey, section, values, onChange, defaultOpen }) {
+function Section({ sectionKey, section, values, onChange, defaultOpen, children }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
     <div className="bg-[#161616] border border-[#222] rounded-lg overflow-hidden">
@@ -401,6 +676,7 @@ function Section({ sectionKey, section, values, onChange, defaultOpen }) {
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-3">
+          {children}
           {section.sliders.map((s) => (
             <Slider key={s.key} config={s} value={values[s.key]} onChange={onChange} />
           ))}
@@ -413,11 +689,11 @@ function Section({ sectionKey, section, values, onChange, defaultOpen }) {
 /* ── Preset Bar ───────────────────────────────────────── */
 function PresetBar({ active, onSelect }) {
   return (
-    <div className="flex gap-2 flex-wrap">
+    <div className="flex gap-1.5 flex-wrap">
       {Object.entries(PRESETS).map(([key, p]) => (
         <button
           key={key}
-          className={`px-3 py-1.5 rounded text-xs font-semibold transition-all ${
+          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all ${
             active === key
               ? 'bg-[#c9a84c] text-black'
               : 'bg-[#222] text-[#888] hover:bg-[#333] hover:text-[#c9a84c]'
@@ -435,8 +711,9 @@ function PresetBar({ active, onSelect }) {
 function ExportPanel({ params }) {
   const config = {
     f09_preview: {
-      version: '2.0.0',
+      version: '2.1.0',
       generated: new Date().toISOString(),
+      glowMode: params.glowMode,
       restore: {
         compressionFix: params.compressionFix,
         detailEnhance: params.detailEnhance,
@@ -545,6 +822,11 @@ export default function App() {
     setActivePreset(null);
   }, []);
 
+  const handleGlowMode = useCallback((mode) => {
+    setParams((prev) => ({ ...prev, glowMode: mode }));
+    setActivePreset(null);
+  }, []);
+
   const handlePreset = useCallback((key) => {
     const p = PRESETS[key];
     setParams({ ...p });
@@ -570,7 +852,7 @@ export default function App() {
               <span className="text-[#c9a84c]">F09</span> AETHER COMPOSITUM
             </h1>
             <p className="text-xs text-[#666] mt-0.5">
-              Preview v2 — Topaz Restore + AE Style — 14 parameters
+              Preview v2.1 — Topaz Restore + AE Style + 5 Glow Modes
             </p>
           </div>
           <div className="text-xs text-[#444]">
@@ -604,6 +886,11 @@ export default function App() {
                 Presets
               </h3>
               <PresetBar active={activePreset} onSelect={handlePreset} />
+            </div>
+
+            {/* Glow Mode Selector */}
+            <div className="bg-[#161616] border border-[#222] rounded-lg p-4">
+              <GlowModeSelector active={params.glowMode || 'classic'} onChange={handleGlowMode} />
             </div>
 
             {/* Sections */}
@@ -672,7 +959,7 @@ export default function App() {
                 </div>
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">2. Adjust</div>
-                  Restore (Topaz) + Style (AE) — instant preview
+                  Restore + Style + Glow Mode — instant preview
                 </div>
                 <div>
                   <div className="text-[#c9a84c] font-semibold mb-1">3. Export</div>
