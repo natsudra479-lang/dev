@@ -29,24 +29,28 @@ const SECTIONS = {
       { key: 'sharpenWidth',     min: 0.5, max: 30.0, step: 0.1,  label: 'Sharpen Width', unit: 'px' },
       { key: 'edgeThreshold',    min: 0,   max: 600, step: 1,    label: 'Edge Threshold', unit: '' },
       { key: 'contrast',         min: 0.5, max: 12.0, step: 0.05, label: 'Contrast',      unit: 'x' },
+      { key: 'exposure',         min: 0.0, max: 1.5, step: 0.05, label: 'Exposure',      unit: '' },
       { key: 'saturation',       min: 0.0, max: 12.0, step: 0.05, label: 'Saturation',    unit: 'x' },
+      { key: 'vibrance',         min: 0,   max: 100, step: 1,    label: 'Vibrance',      unit: '%' },
       { key: 'warmth',           min: 0.5, max: 9.0, step: 0.05, label: 'Warmth',        unit: 'x' },
       { key: 'glowIntensity',    min: 0.0, max: 6.0, step: 0.05, label: 'Glow',          unit: 'x' },
       { key: 'glowWidth',        min: 5,   max: 480,  step: 1,    label: 'Glow Width',    unit: 'px' },
+      { key: 'vignette',         min: 0,   max: 100, step: 1,    label: 'Vignette',      unit: '%' },
     ],
   },
 };
 
 const PRESETS = {
-  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, glowMode: 'classic', label: 'Beauty',  icon: '\u2726' },
-  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, glowMode: 'cosmic', label: 'Demon',   icon: '\uD83D\uDD25' },
-  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, glowMode: 'classic', label: 'Cinema',  icon: '\uD83C\uDFAC' },
-  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, glowMode: 'neon', label: 'Crunchy', icon: '\uD83D\uDC8E' },
-  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, glowMode: 'classic', label: 'Clean',   icon: '\u25FB' },
-  aurora:  { compressionFix: 25, detailEnhance: 35, detailReveal: 30, denoise: 15, dehalo: 8,  sharpenIntensity: 1.2, sharpenWidth: 1.3, edgeThreshold: 25, contrast: 1.08, saturation: 1.15, warmth: 0.95, glowIntensity: 0.8, glowWidth: 60, glowMode: 'aurora', label: 'Aurora',  icon: '\u{1F30C}' },
-  neonarc: { compressionFix: 35, detailEnhance: 55, detailReveal: 45, denoise: 10, dehalo: 12, sharpenIntensity: 2.0, sharpenWidth: 2.2, edgeThreshold: 10, contrast: 1.25, saturation: 1.3, warmth: 1.05, glowIntensity: 1.0, glowWidth: 40, glowMode: 'neon', label: 'Neon Arc', icon: '\u26A1' },
-  blockbuster: { compressionFix: 25, detailEnhance: 40, detailReveal: 30, denoise: 15, dehalo: 5, sharpenIntensity: 1.1, sharpenWidth: 1.2, edgeThreshold: 25, contrast: 1.15, saturation: 1.15, warmth: 1.08, glowIntensity: 0.5, glowWidth: 45, glowMode: 'classic', label: 'Blockbuster', icon: '\uD83C\uDFA5' },
-  ultraSharp: { compressionFix: 15, detailEnhance: 50, detailReveal: 45, denoise: 5, dehalo: 8, sharpenIntensity: 2.0, sharpenWidth: 1.8, edgeThreshold: 12, contrast: 1.15, saturation: 1.08, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', label: 'Ultra Sharp', icon: '\uD83D\uDD2D' },
+  beauty:  { compressionFix: 30, detailEnhance: 40, detailReveal: 30, denoise: 20, dehalo: 10, sharpenIntensity: 1.5, sharpenWidth: 1.5, edgeThreshold: 20, contrast: 1.1, saturation: 1.08, warmth: 1.0, glowIntensity: 0.35, glowWidth: 30, glowMode: 'classic', exposure: 0, vibrance: 10, vignette: 0, label: 'Beauty',  icon: '\u2726' },
+  demon:   { compressionFix: 50, detailEnhance: 70, detailReveal: 60, denoise: 30, dehalo: 20, sharpenIntensity: 1.8, sharpenWidth: 2.0, edgeThreshold: 15, contrast: 1.3, saturation: 1.4, warmth: 1.1, glowIntensity: 0.6, glowWidth: 50, glowMode: 'cosmic', exposure: 0.1, vibrance: 0, vignette: 15, label: 'Demon',   icon: '\uD83D\uDD25' },
+  cinema:  { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 15, dehalo: 5,  sharpenIntensity: 0.8, sharpenWidth: 1.0, edgeThreshold: 30, contrast: 1.05, saturation: 1.05, warmth: 0.98, glowIntensity: 0.3, glowWidth: 25, glowMode: 'classic', exposure: 0, vibrance: 0, vignette: 25, label: 'Cinema',  icon: '\uD83C\uDFAC' },
+  crunchy: { compressionFix: 40, detailEnhance: 60, detailReveal: 50, denoise: 25, dehalo: 15, sharpenIntensity: 1.5, sharpenWidth: 1.8, edgeThreshold: 18, contrast: 1.15, saturation: 1.1, warmth: 1.02, glowIntensity: 0.4, glowWidth: 35, glowMode: 'neon', exposure: 0, vibrance: 0, vignette: 10, label: 'Crunchy', icon: '\uD83D\uDC8E' },
+  clean:   { compressionFix: 60, detailEnhance: 20, detailReveal: 15, denoise: 40, dehalo: 5,  sharpenIntensity: 0.5, sharpenWidth: 0.8, edgeThreshold: 40, contrast: 1.03, saturation: 1.0, warmth: 1.0, glowIntensity: 0.15, glowWidth: 15, glowMode: 'classic', exposure: 0, vibrance: 0, vignette: 0, label: 'Clean',   icon: '\u25FB' },
+  aurora:  { compressionFix: 25, detailEnhance: 35, detailReveal: 30, denoise: 15, dehalo: 8,  sharpenIntensity: 1.2, sharpenWidth: 1.3, edgeThreshold: 25, contrast: 1.08, saturation: 1.15, warmth: 0.95, glowIntensity: 0.8, glowWidth: 60, glowMode: 'aurora', exposure: 0, vibrance: 0, vignette: 0, label: 'Aurora',  icon: '\u{1F30C}' },
+  neonarc: { compressionFix: 35, detailEnhance: 55, detailReveal: 45, denoise: 10, dehalo: 12, sharpenIntensity: 2.0, sharpenWidth: 2.2, edgeThreshold: 10, contrast: 1.25, saturation: 1.3, warmth: 1.05, glowIntensity: 1.0, glowWidth: 40, glowMode: 'neon', exposure: 0.05, vibrance: 0, vignette: 10, label: 'Neon Arc', icon: '\u26A1' },
+  blockbuster: { compressionFix: 25, detailEnhance: 40, detailReveal: 30, denoise: 15, dehalo: 5, sharpenIntensity: 1.1, sharpenWidth: 1.2, edgeThreshold: 25, contrast: 1.15, saturation: 1.15, warmth: 1.08, glowIntensity: 0.5, glowWidth: 45, glowMode: 'classic', exposure: 0.1, vibrance: 0, vignette: 30, label: 'Blockbuster', icon: '\uD83C\uDFA5' },
+  ultraSharp: { compressionFix: 15, detailEnhance: 50, detailReveal: 45, denoise: 5, dehalo: 8, sharpenIntensity: 2.0, sharpenWidth: 1.8, edgeThreshold: 12, contrast: 1.15, saturation: 1.08, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', exposure: 0, vibrance: 0, vignette: 0, label: 'Ultra Sharp', icon: '\uD83D\uDD2D' },
+  tiktok4k: { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 10, dehalo: 10, sharpenIntensity: 3.2, sharpenWidth: 2.5, edgeThreshold: 8, contrast: 1.25, exposure: 0.45, saturation: 1.25, vibrance: 25, warmth: 1.06, glowIntensity: 0.2, glowWidth: 75, glowMode: 'classic', vignette: 75, label: 'TikTok 4K', icon: '\u{1F4F1}' },
 };
 
 const DEFAULTS = PRESETS.beauty;
@@ -545,12 +549,38 @@ function processImage(canvas, ctx, img, p) {
     }
   }
 
+  // AE Brightness/Exposure — out = in * 2^exposure
+  if (p.exposure > 0) {
+    const f = Math.pow(2, p.exposure);
+    for (let i = 0; i < d.length; i += 4) {
+      d[i]   = Math.min(255, d[i] * f);
+      d[i+1] = Math.min(255, d[i+1] * f);
+      d[i+2] = Math.min(255, d[i+2] * f);
+    }
+  }
+
   if (p.saturation !== 1.0) {
     for (let i = 0; i < d.length; i += 4) {
       const gray = 0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2];
       d[i]   = Math.min(255, Math.max(0, gray + p.saturation * (d[i] - gray)));
       d[i+1] = Math.min(255, Math.max(0, gray + p.saturation * (d[i+1] - gray)));
       d[i+2] = Math.min(255, Math.max(0, gray + p.saturation * (d[i+2] - gray)));
+    }
+  }
+
+  // AE Vibrance — boosts low-saturation pixels, protects skin tones
+  if (p.vibrance > 0) {
+    const strength = p.vibrance / 100;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i], g = d[i+1], b = d[i+2];
+      const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
+      const sat = (mx - mn) / 255;
+      let amt = strength * (1 - sat);
+      if (r > g && g > b && (r - b) > 15 && (r - b) < 130) amt *= 0.35;
+      const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      d[i]   = Math.min(255, Math.max(0, gray + amt * (r - gray)));
+      d[i+1] = Math.min(255, Math.max(0, gray + amt * (g - gray)));
+      d[i+2] = Math.min(255, Math.max(0, gray + amt * (b - gray)));
     }
   }
 
@@ -604,6 +634,27 @@ function processImage(canvas, ctx, img, p) {
       case 'digital': glowDigitalRain(canvas, ctx, w, h, p.glowIntensity, baseW); break;
       default:        glowClassic(canvas, ctx, w, h, p.glowIntensity, baseW); break;
     }
+  }
+
+  // CC Vignette — radial darkening, applied last on the composite
+  if (p.vignette > 0) {
+    const strength = p.vignette / 100;
+    const vData = ctx.getImageData(0, 0, w, h);
+    const vd = vData.data;
+    const cx = w / 2, cy = h / 2;
+    const norm = Math.sqrt(cx * cx + cy * cy);
+    for (let y = 0; y < h; y++) {
+      for (let x = 0; x < w; x++) {
+        const i = (y * w + x) * 4;
+        const dx = x - cx, dy = y - cy;
+        const dist = Math.sqrt(dx * dx + dy * dy) / norm;
+        const t = Math.max(0, Math.min(1, (dist - 0.35) / 0.65));
+        const sm = t * t * (3 - 2 * t);
+        const f = 1 - strength * sm;
+        vd[i] *= f; vd[i+1] *= f; vd[i+2] *= f;
+      }
+    }
+    ctx.putImageData(vData, 0, 0);
   }
 
   return canvas.toDataURL('image/png');
@@ -713,7 +764,7 @@ function PresetBar({ active, onSelect }) {
 function ExportPanel({ params }) {
   const config = {
     f09_preview: {
-      version: '2.1.0',
+      version: '2.2.0',
       generated: new Date().toISOString(),
       glowMode: params.glowMode,
       restore: {
@@ -732,6 +783,9 @@ function ExportPanel({ params }) {
         warmth: params.warmth,
         glowIntensity: params.glowIntensity,
         glowWidth: params.glowWidth,
+        exposure: params.exposure,
+        vibrance: params.vibrance,
+        vignette: params.vignette,
       },
     },
   };
@@ -854,7 +908,7 @@ export default function App() {
               <span className="text-[#c9a84c]">F09</span> AETHER COMPOSITUM
             </h1>
             <p className="text-xs text-[#666] mt-0.5">
-              Preview v2.1 — Topaz Restore + AE Style + 5 Glow Modes
+              Preview v2.2 — Restore + AE Style (Exposure/Vibrance/Vignette) + 5 Glow Modes
             </p>
           </div>
           <div className="text-xs text-[#444]">
