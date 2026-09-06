@@ -64,10 +64,12 @@ def process_frame(img):
         mask = (np.abs(diff) > 40).astype(np.float32)
         img_f = np.clip(img_f - diff * s * 0.15 * mask, 0, 255)
 
-    # Contrast
+    # Contrast — pivots around the frame's mean luminance (adaptive):
+    # identical to AE on normal footage (mean≈128), but preserves dark clips
     if p['contrast'] != 1.0:
         c = p['contrast']
-        img_f = np.clip(img_f * c + 128*(1-c), 0, 255)
+        pivot = float((0.0722*img_f[:,:,0] + 0.7152*img_f[:,:,1] + 0.2126*img_f[:,:,2]).mean())
+        img_f = np.clip((img_f - pivot) * c + pivot, 0, 255)
 
     # Exposure (AE Brightness) — out = in * 2^exposure
     if p['exposure'] > 0:
@@ -85,7 +87,7 @@ def process_frame(img):
         mx = img_f.max(axis=-1, keepdims=True)
         mn = img_f.min(axis=-1, keepdims=True)
         sat = (mx - mn) / 255.0
-        amt = strength * (1 - sat)
+        amt = 1.0 + strength * (1 - sat)   # >1 = saturation gain, not a pull toward gray
         gray = 0.0722*img_f[:,:,0:1] + 0.7152*img_f[:,:,1:2] + 0.2126*img_f[:,:,2:3]
         img_f = np.clip(gray + amt*(img_f - gray), 0, 255)
 
@@ -138,9 +140,9 @@ def process_frame(img):
         c2 = (img_u8.astype(np.float32) * mask2[:,:,np.newaxis]).astype(np.uint8)
         c2b = box_blur(box_blur(box_blur(c2, bw*0.7), bw*0.7), bw*0.7)
 
-        # Screen blend
+        # Screen blend (alpha scaled by intensity — parity with JS preview)
         result = img_u8.astype(np.float32)
-        for layer, alpha in [(c1b, 0.6), (c2b, 0.35)]:
+        for layer, alpha in [(c1b, 0.6 * intensity), (c2b, 0.35 * intensity)]:
             lf = layer.astype(np.float32)
             result = 255 - (255-result)*(255 - lf*alpha)/255.0
         img_u8 = np.clip(result, 0, 255).astype(np.uint8)

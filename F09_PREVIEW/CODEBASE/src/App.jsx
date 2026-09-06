@@ -50,7 +50,7 @@ const PRESETS = {
   neonarc: { compressionFix: 35, detailEnhance: 55, detailReveal: 45, denoise: 10, dehalo: 12, sharpenIntensity: 2.0, sharpenWidth: 2.2, edgeThreshold: 10, contrast: 1.25, saturation: 1.3, warmth: 1.05, glowIntensity: 1.0, glowWidth: 40, glowMode: 'neon', exposure: 0.05, vibrance: 0, vignette: 10, label: 'Neon Arc', icon: '\u26A1' },
   blockbuster: { compressionFix: 25, detailEnhance: 40, detailReveal: 30, denoise: 15, dehalo: 5, sharpenIntensity: 1.1, sharpenWidth: 1.2, edgeThreshold: 25, contrast: 1.15, saturation: 1.15, warmth: 1.08, glowIntensity: 0.5, glowWidth: 45, glowMode: 'classic', exposure: 0.1, vibrance: 0, vignette: 30, label: 'Blockbuster', icon: '\uD83C\uDFA5' },
   ultraSharp: { compressionFix: 15, detailEnhance: 50, detailReveal: 45, denoise: 5, dehalo: 8, sharpenIntensity: 2.0, sharpenWidth: 1.8, edgeThreshold: 12, contrast: 1.15, saturation: 1.08, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', exposure: 0, vibrance: 0, vignette: 0, label: 'Ultra Sharp', icon: '\uD83D\uDD2D' },
-  tiktok4k: { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 10, dehalo: 10, sharpenIntensity: 3.2, sharpenWidth: 2.5, edgeThreshold: 8, contrast: 1.25, exposure: 0.45, saturation: 1.25, vibrance: 25, warmth: 1.06, glowIntensity: 0.2, glowWidth: 75, glowMode: 'classic', vignette: 75, label: 'TikTok 4K', icon: '\u{1F4F1}' },
+  tiktok4k: { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 10, dehalo: 10, sharpenIntensity: 3.2, sharpenWidth: 2.5, edgeThreshold: 8, contrast: 1.25, exposure: 0.6, saturation: 1.45, vibrance: 40, warmth: 1.06, glowIntensity: 0.1, glowWidth: 75, glowMode: 'classic', vignette: 75, label: 'TikTok 4K', icon: '\u{1F4F1}' },
 };
 
 const DEFAULTS = PRESETS.beauty;
@@ -539,13 +539,17 @@ function processImage(canvas, ctx, img, p) {
   }
 
   // ═══ AE STYLE ═══
+  // AE Contrast — adaptive pivot (frame mean luminance): same as AE on bright
+  // footage (mean≈128), but preserves dark clips instead of crushing shadows
   if (p.contrast !== 1.0) {
     const c = p.contrast;
-    const intercept = 128 * (1 - c);
+    let sum = 0;
+    for (let i = 0; i < d.length; i += 4) sum += 0.2126 * d[i] + 0.7152 * d[i+1] + 0.0722 * d[i+2];
+    const pivot = sum / (d.length / 4);
     for (let i = 0; i < d.length; i += 4) {
-      d[i]   = Math.min(255, Math.max(0, d[i] * c + intercept));
-      d[i+1] = Math.min(255, Math.max(0, d[i+1] * c + intercept));
-      d[i+2] = Math.min(255, Math.max(0, d[i+2] * c + intercept));
+      d[i]   = Math.min(255, Math.max(0, (d[i] - pivot) * c + pivot));
+      d[i+1] = Math.min(255, Math.max(0, (d[i+1] - pivot) * c + pivot));
+      d[i+2] = Math.min(255, Math.max(0, (d[i+2] - pivot) * c + pivot));
     }
   }
 
@@ -575,8 +579,8 @@ function processImage(canvas, ctx, img, p) {
       const r = d[i], g = d[i+1], b = d[i+2];
       const mx = Math.max(r, g, b), mn = Math.min(r, g, b);
       const sat = (mx - mn) / 255;
-      let amt = strength * (1 - sat);
-      if (r > g && g > b && (r - b) > 15 && (r - b) < 130) amt *= 0.35;
+      let amt = 1 + strength * (1 - sat);   // >1 = saturation gain, not a pull toward gray
+      if (r > g && g > b && (r - b) > 15 && (r - b) < 130) amt = 1 + (amt - 1) * 0.35;
       const gray = 0.2126 * r + 0.7152 * g + 0.0722 * b;
       d[i]   = Math.min(255, Math.max(0, gray + amt * (r - gray)));
       d[i+1] = Math.min(255, Math.max(0, gray + amt * (g - gray)));
