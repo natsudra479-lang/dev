@@ -52,6 +52,7 @@ const PRESETS = {
   ultraSharp: { compressionFix: 15, detailEnhance: 50, detailReveal: 45, denoise: 5, dehalo: 8, sharpenIntensity: 2.0, sharpenWidth: 1.8, edgeThreshold: 12, contrast: 1.15, saturation: 1.08, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', exposure: 0, vibrance: 0, vignette: 0, label: 'Ultra Sharp', icon: '\uD83D\uDD2D' },
   tiktok4k: { compressionFix: 20, detailEnhance: 30, detailReveal: 25, denoise: 10, dehalo: 10, sharpenIntensity: 3.2, sharpenWidth: 2.5, edgeThreshold: 8, contrast: 1.25, exposure: 0.6, saturation: 1.45, vibrance: 40, warmth: 1.06, glowIntensity: 0.1, glowWidth: 75, glowMode: 'classic', vignette: 75, label: 'TikTok 4K', icon: '\u{1F4F1}' },
   cleanCC: { compressionFix: 25, detailEnhance: 40, detailReveal: 35, denoise: 15, dehalo: 8, sharpenIntensity: 1.3, sharpenWidth: 1.2, edgeThreshold: 20, contrast: 1.12, exposure: 0.35, saturation: 1.25, vibrance: 0, warmth: 1.0, glowIntensity: 0.0, glowWidth: 5, glowMode: 'classic', vignette: 50, label: 'Clean CC', icon: '\uD83C\uDF9A' },
+  polyester: { compressionFix: 25, detailEnhance: 45, detailReveal: 35, denoise: 10, dehalo: 10, sharpenIntensity: 2.6, sharpenWidth: 1.6, edgeThreshold: 15, contrast: 1.18, exposure: 0.25, saturation: 1.18, vibrance: 15, warmth: 1.04, glowIntensity: 0.55, glowWidth: 65, glowMode: 'classic', vignette: 35, label: 'Polyester', icon: '\u{1F9F5}' },
 };
 
 const DEFAULTS = PRESETS.beauty;

@@ -26,7 +26,7 @@ npm run dev
 
 3. Dans le navigateur :
    - Upload la frame extraite
-   - Bouge les sliders (RESTORE + STYLE) ou choisis un preset (12 disponibles)
+   - Bouge les sliders (RESTORE + STYLE) ou choisis un preset (13 disponibles)
    - Choisis un Glow Mode (Classic, Aurora, Neon, Cosmic, Digital)
    - Vois le résultat en side-by-side
    - Exporte le JSON (il contient TOUT, y compris exposure/vibrance/vignette)
@@ -63,7 +63,7 @@ python3 F09_PREVIEW/process_video.py input.mp4 output.mp4 "$(cat mon_preset.json
 | Glow Width | 5 | 480 | Rayon du glow |
 | Vignette | 0 | 100 | Assombrissement radial (équivalent CC Vignette), appliqué en dernier |
 
-## Presets (12)
+## Presets (13)
 
 | Preset | Look | Points clés |
 |---|---|---|
@@ -78,6 +78,7 @@ python3 F09_PREVIEW/process_video.py input.mp4 output.mp4 "$(cat mon_preset.json
 | 🔍 Ultra Sharp | Clarté max, zéro glow | sharpen fort |
 | 📱 TikTok 4K | Oversharpen viral | exposure 0.6, saturation 1.45, vibrance 40, vignette 75, glow 0.1 |
 | 🎞 Clean CC | Correction naturelle (tuto n°2) | glow 0, exposure 0.35, saturation 1.25, vignette 50, clarity via detailReveal |
+| 🧵 Polyester | Look « polyester edit » — côté visuel uniquement | sharpen 2.6 crispé, glow doux 0.55/65, exposure 0.25, sat 1.18 + vibrance 15, warmth 1.04, vignette 35, zéro audio/beats |
 | (Beauty par défaut) | | |
 
 ## Corrections v2.2.0 (parité preview ↔ rendu)
