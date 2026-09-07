@@ -1,0 +1,25 @@
+{
+  "step1": {
+    "stage": "upscale",
+    "time_s": 19.3,
+    "output_mb": 22.51,
+    "status": "ok"
+  },
+  "step2": {
+    "stage": "color_grade",
+    "time_s": 30.9,
+    "output_mb": 29.31,
+    "status": "ok"
+  },
+  "step3": {
+    "stage": "interpolate",
+    "time_s": 159.7,
+    "output_mb": 180.5,
+    "status": "ok"
+  },
+  "total": {
+    "elapsed_s": 209.9,
+    "input_mb": 22.51,
+    "output_mb": 180.5
+  }
+}
