@@ -87,6 +87,16 @@ python3 F09_PREVIEW/process_video.py input.mp4 output.mp4 "$(cat mon_preset.json
 - **Contraste** : pivot adaptatif sur la luminance moyenne — plus d'écrasement des ombres sur clips sombres
 - **Glow (rendu Python)** : alphas désormais multipliés par `glowIntensity` (identique à la preview JS)
 
+## Tests de rendu (comparatif, même segment)
+
+| Date | Campagne | Preset | Entrée | Sortie | Statut | Mesures vs source |
+|---|---|---|---|---|---|---|
+| 2026-09-06 | `v2_tiktok4k_test` | TikTok 4K | 120 FPS / 1920×1080 (5 s) | 30 FPS / 720p, 1.1 Mo | OK | chroma +47%, lum −4%, netteté +382% |
+| 2026-09-06 | `v2_cleancc_test` | Clean CC | 120 FPS / 1920×1080 (5 s) | 30 FPS / 720p, 0.9 Mo | OK | chroma +19%, lum −5%, netteté +378% |
+| 2026-09-07 | `v2_polyester_test` | Polyester | 120 FPS / 1920×1080 (5 s) | 30 FPS / 720p, 1.0 Mo | OK | chroma +18%, lum +14%, netteté +395% |
+
+Rendus conservés dans `output/` et archivés dans `F09_PREVIEW/CODEBASE/public/`.
+
 ## Coût
 
 - 1 preview (1 frame) : ~$0.001
